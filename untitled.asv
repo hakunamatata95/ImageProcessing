@@ -1,0 +1,30 @@
+input_image  = imread('C:\Users\spide\Desktop\tumore1.png');
+% Definisci l'elemento strutturale (diamante) con un raggio di 2
+SE = strel('diamond', 4);
+
+% Erosione dell'immagine con l'elemento strutturale definito
+eroded_image = imerode(input_image, SE);
+Helpers.Subplot({input_image, eroded_image})
+
+% Converte l'immagine in scala di grigi se necessario
+if size(eroded_image, 3) == 3
+    eroded_image = rgb2gray(eroded_image);
+end
+
+%smussa gli angoli, porta a linee piu morbide nell'immage, visibili miglioramenti
+%sulla linea dei polmoni
+eroded_image_medfilt = medfilt2(eroded_image, [5, 5]);
+
+level = graythresh(eroded_image_medfilt);
+tumore = imbinarize(eroded_image_medfilt,level);
+
+%bware = bwareaopen(tumore, 100);
+bware2 = bwareaopen(tumore, 150);
+
+%prova = bware - bware2;
+prova = tumore - bware2;
+Helpers.Subplot({tumore, bware2, prova})
+Helpers.Subplot({eroded_image, eroded_imageMedFilt1,eroded_imageMedFilt2, eroded_imageMedFilt3 })
+
+
+%fill = imfill(tumore, 'holes');
