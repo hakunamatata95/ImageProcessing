@@ -4,7 +4,6 @@ SE = strel('diamond', 4);
 
 % Erosione dell'immagine con l'elemento strutturale definito
 eroded_image = imerode(input_image, SE);
-Helpers.Subplot({input_image, eroded_image})
 
 % Converte l'immagine in scala di grigi se necessario
 if size(eroded_image, 3) == 3
@@ -15,16 +14,34 @@ end
 %sulla linea dei polmoni
 eroded_image_medfilt = medfilt2(eroded_image, [5, 5]);
 
-level = graythresh(eroded_image_medfilt);
-tumore = imbinarize(eroded_image_medfilt,level);
-
-%bware = bwareaopen(tumore, 100);
-bware2 = bwareaopen(tumore, 150);
-
-%prova = bware - bware2;
-prova = tumore - bware2;
-Helpers.Subplot({tumore, bware2, prova})
-Helpers.Subplot({eroded_image, eroded_imageMedFilt1,eroded_imageMedFilt2, eroded_imageMedFilt3 })
+grey_level = graythresh(eroded_image_medfilt);
+binarized_image = imbinarize(eroded_image_medfilt, grey_level);
 
 
-%fill = imfill(tumore, 'holes');
+image_without_results = bwareaopen(binarized_image, 150);
+
+occurences = binarized_image - image_without_results;
+
+Helpers.Subplot({binarized_image, image_without_results, occurences})
+ 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Etichetta le regioni connesse nell'immagine binarizzata
+[label_matrix, num_labels] = bwlabel(occurences);
+
+% Ottiene le proprietà delle regioni connesse
+region_props = regionprops(label_matrix, 'Area', 'BoundingBox', 'ConvexHull');
+hold on;
+
+% Itera su tutte le regioni connesse trovate
+for i = 1:num_labels
+    % Disegna il contorno convesso (convex hull) della regione
+    plot(region_props(i).ConvexHull(:,1), region_props(i).ConvexHull(:,2), 'r', 'LineWidth', 2);
+    
+    % Mostra l'area della regione
+    text(region_props(i).BoundingBox(1), region_props(i).BoundingBox(2) - 10, ...
+        ['Area: ' num2str(regioni_prop(i).Area)], 'Color', 'yellow', 'FontSize', 10);
+end
+
+hold off;
+s=1;
