@@ -5,8 +5,11 @@ classdef Helpers
     %end
     
     methods(Static)
-        function Show3DImage(img)
-            % Calcola la somma di due numeri
+        function binImage = otsubin(image)
+            greyLevel = graythresh(image);
+            binImage = imbinarize(image, greyLevel);
+        end
+        function show3dimage(img)
             figure;
             subplot(1,3,1);
             imshow(squeeze(img(:, :, round(size(img, 3)/2))), []);
@@ -18,7 +21,7 @@ classdef Helpers
             imshow(squeeze(img(round(size(img, 1)/2), :, :)), []);
             title('Piano mediano (Z)');
         end  
-        function Subplot(array_immagini)
+        function imsshow(array_immagini)
             num_immagini = numel(array_immagini);
         
             % Calcola il numero di righe e colonne per disporre le immagini nei subplot
