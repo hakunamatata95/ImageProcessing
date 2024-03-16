@@ -6,6 +6,9 @@ classdef Helpers
     
     methods(Static)
         function binImage = otsubin(image)
+            if size(image, 3) == 3
+               image = rgb2gray(image);
+            end
             greyLevel = graythresh(image);
             binImage = imbinarize(image, greyLevel);
         end

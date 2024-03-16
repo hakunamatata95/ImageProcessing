@@ -45,11 +45,9 @@ fill_color = [255, 0, 0];  % [R, G, B]
 
 % Riempimento della regione bianca a partire dal punto del centroide
 %mask_filled = imfill(resultImageBin, [round(centroids(1).Centroid(1)), round(centroids(1).Centroid(2))],8);
-immagine_invertita = imcomplement(resultImageBin);
-mask_filled = imfill(immagine_invertita, [round(centroids(1).Centroid(1)), round(centroids(1).Centroid(2))], 4);
+mask_filled = imfill(resultImageBin, [3 3]);
 %mask_filled = imfill(resultImageBin, round(centroids.Centroid));
-imshow(resultImageBin);
-imshow(mask_filled);
+
 % Applica il colore alla regione riempita
 image_colored = bsxfun(@times, mask_filled, reshape(fill_color, 1, 1, []));
 
