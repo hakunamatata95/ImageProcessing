@@ -35,11 +35,8 @@ for i = 1:num_labels
     
     % Mostra l'area della regione
     text(regionProps(i).BoundingBox(1), regionProps(i).BoundingBox(2) - 10, ...
-<<<<<<< HEAD
         ['Area: ' num2str(regionProps(i).Area)], 'Color', 'yellow', 'FontSize', 10);
-=======
-        ['Area: ' num2str(regioni_prop(i).Area)], 'Color', 'yellow', 'FontSize', 10);
->>>>>>> b8aab27a589ec4de110b85bd0666b9b2035a08b8
+
 end
 
 hold off;% Disbilita la sovrapposizione dei tracciati
