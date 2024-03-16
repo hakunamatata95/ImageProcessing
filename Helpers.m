@@ -1,6 +1,4 @@
 classdef Helpers
-    %HELPERSS Summary of this class goes here
-    %   Detailed explanation goes here
     
     %properties
     %    Property1
