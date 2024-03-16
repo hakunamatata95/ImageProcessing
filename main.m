@@ -1,12 +1,13 @@
 inputImage  = imread('imagesProject\tumore1.png');
+resultImageBin = Helpers.otsubin(inputImage);
 %inputImage  = imread('imagesProject\2tumori.png');
 % Definisci l'elemento strutturale (diamante) con un raggio di 2
-structureElement = strel('diamond', 4);
-
+structureElement = strel('diamond', 2);
 
 % Erosione dell'immagine con l'elbinarizedImageemento strutturale definito
 erodedImage = imerode(inputImage, structureElement);
 %Helpers.imsshow({inputImage, erodedImage});
+
 % Converte l'immagine in scala di grigi se necessario
 if size(erodedImage, 3) == 3
     erodedImage = rgb2gray(erodedImage);
@@ -18,7 +19,6 @@ erodedImageMedfilt = medfilt2(erodedImage, [5, 5]);
 
 binarizedImage = Helpers.otsubin(erodedImageMedfilt);
 
-%Helpers.imsshow({inputImage,binarizedImage})
 imageWithoutResults = bwareaopen(binarizedImage, 150);
 
 occurences = binarizedImage - imageWithoutResults;
@@ -26,67 +26,35 @@ occurences = binarizedImage - imageWithoutResults;
 % Etichetta le regioni connesse nell'immagine binarizzata
 [label_matrix, num_labels] = bwlabel(occurences);
 
-
 centroids = regionprops(label_matrix, 'Centroid');
 % Ottiene le proprietà delle regioni connesse
-% TODO: controllare utilità convexHull
-regionProps = regionprops(label_matrix, 'Area', 'Perimeter', 'BoundingBox', 'ConvexHull');
 
+imshow(inputImage);
 
-resultImageBin = Helpers.otsubin(inputImage);
-resultImageBinGray = uint8(resultImageBin) * 255;
-% Load your image (replace 'your_image.jpg' with the filename of your image)
-inputImage;
-
-% Definisci il colore con cui vuoi riempire la regione (ad esempio, rosso)
-fill_color = [255, 0, 0];  % [R, G, B]
-
-
-
-% Riempimento della regione bianca a partire dal punto del centroide
-%mask_filled = imfill(resultImageBin, [round(centroids(1).Centroid(1)), round(centroids(1).Centroid(2))],8);
-immagine_invertita = imcomplement(resultImageBin);
-mask_filled = imfill(immagine_invertita, [round(centroids(1).Centroid(1)), round(centroids(1).Centroid(2))], 4);
-%mask_filled = imfill(resultImageBin, round(centroids.Centroid));
-imshow(resultImageBin);
-imshow(mask_filled);
-% Applica il colore alla regione riempita
-image_colored = bsxfun(@times, mask_filled, reshape(fill_color, 1, 1, []));
-
-% Visualizza l'immagine colorata
-imshow(image_colored);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%img=resultImageBin - binarizedImage
-
-Helpers.imsshow(resultImageBin);
 hold on; % Abilita la sovrapposizione dei tracciati
-
 % Itera su tutte le regioni connesse trovate
 for i = 1:num_labels
-    % Disegna il contorno convesso (convex hull) della regione
-    plot(regionProps(i).ConvexHull(:,1), regionProps(i).ConvexHull(:,2), 'r', 'LineWidth', 2);
+    
+    % Identifica la regione bianca basata sulle coordinate fornite
+    region = bwselect(resultImageBin, centroids(i).Centroid(1), centroids(i).Centroid(2));
+    regionProps = regionprops(region, 'Area', 'Perimeter', 'BoundingBox');
 
-    % Mostra l'area della regione
-    text(regionProps(i).BoundingBox(1), regionProps(i).BoundingBox(2) - 25, ...
-        ['Area: ' num2str(regionProps(i).Area)], 'Color', 'yellow', 'FontSize', 10);
-text(regionProps(i).BoundingBox(2)', regionProps(i).BoundingBox(1), ...
-        ['Perimeter: ' num2str(regionProps(i).Perimeter)], 'Color', 'yellow', 'FontSize', 10);
+    % Trova il perimetro della parte bianca dell'immagine binarizzata
+    perimeterTrack = bwperim(region,8);
+    [B,L] = bwboundaries(perimeterTrack,'noholes');
+    for k = 1:length(B)
+        boundary = B{k};
+        plot(boundary(:,2), boundary(:,1), 'r', 'LineWidth', 1)
+    end
+
+    %.BoundingBox sono [x, y, width, height]
+    boundingBox = regionProps.BoundingBox;
+    text(boundingBox(1) , boundingBox(2) - 10, ...
+        ['Area: ' num2str(regionProps.Area)], 'Color', 'yellow', 'FontSize', 10);
+    text(boundingBox(1), boundingBox(2) + boundingBox(4) + 10, ...
+        ['Perimeter: ' num2str(regionProps.Perimeter)], 'Color', 'yellow', 'FontSize', 10);
 end
 
 hold off;% Disbilita la sovrapposizione dei tracciati
+% Disegna il contorno convesso (convex hull) della regione
+%plot(regionProps(i).ConvexHull(:,1), regionProps(i).ConvexHull(:,2), 'r', 'LineWidth', 2);
