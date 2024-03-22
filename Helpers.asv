@@ -1,12 +1,17 @@
 classdef Helpers
     
+    %properties
+    %    Property1
+    %end
+    
     methods(Static)
         function binImage = otsubin(image)
-            image = Helpers.rgb2gray(image);
+            if size(image, 3) == 3
+               image = rgb2gray(image);
+            end
             greyLevel = graythresh(image);
             binImage = imbinarize(image, greyLevel);
         end
-
         function show3dimage(img)
             figure;
             subplot(1,3,1);
@@ -19,7 +24,6 @@ classdef Helpers
             imshow(squeeze(img(round(size(img, 1)/2), :, :)), []);
             title('Piano mediano (Z)');
         end  
-
         function imsshow(array_immagini)
             num_immagini = numel(array_immagini);
         
@@ -31,22 +35,21 @@ classdef Helpers
             figure;
         
             % Itera su ciascuna immagine nell'array
-            for i = 1 : num_immagini
+            for i = 1:num_immagini
                 % Crea un subplot e mostra l'immagine corrente
                 subplot(num_righe, num_colonne, i);
                 imshow(array_immagini{i});
                 title(['Immagine ', num2str(i)]);
             end
         end
-        function mask = threshold(img,value)
-            mask = img > value;
+        function mask=threshold(img,value)
+            mask=img>value;
         end
 
-        function img = rgb2gray(img)
+        function img = gray_scale(img)
             if size(img, 3) == 3
-                img = rgb2gray(img);
-            end
-        end
+    img = rgb2gray(img);
+end
     end
 end
 

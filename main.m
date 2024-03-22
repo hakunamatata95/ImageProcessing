@@ -9,9 +9,7 @@ erodedImage = imerode(inputImage, structureElement);
 %Helpers.imsshow({inputImage, erodedImage});
 
 % Converte l'immagine in scala di grigi se necessario
-if size(erodedImage, 3) == 3
-    erodedImage = rgb2gray(erodedImage);
-end
+erodedImage = Helpers.rgb2gray(erodedImage);
 
 %smussa gli angoli, porta a linee piu morbide nell'immage, visibili miglioramenti
 %sulla linea dei polmoni
