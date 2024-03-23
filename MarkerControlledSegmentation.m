@@ -33,12 +33,7 @@ marcatori = imimposemin(gradiente_magnitudine, marcatori_interni | marcatori_est
 segmentazione = watershed(marcatori, 8);
 
 
-%Helpers.imsshow({img, gradiente_magnitudine, label2rgb(segmentazione)}, {'Immagine originale', 'Gradiente Magnitudine', 'Segmentazione Watershed'});
-
-% Visualizzazione dell'immagine originale e del gradiente magnitudine
-figure;
-subplot(1, 2, 1), imshow(img), title('Immagine originale');
-subplot(1, 2, 2), imshow(label2rgb(segmentazione)), title('Gradiente Magnitudine');
+Helpers.imsshow({img, label2rgb(segmentazione)}, {'Immagine originale', 'Segmentazione Watershed'});
 
 % Calcola l'area del tumore utilizzando l'analisi dei componenti connessi
 regioni = bwlabel(segmentazione);
