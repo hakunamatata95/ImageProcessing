@@ -70,15 +70,14 @@ title("Colored Labels Superimposed Transparently on Original Image");
 regioni = bwlabel(segmentazione);
 labels_areas = histcounts(regioni, 'BinMethod', 'integers');
 
-for i = 1:length(labels_areas)
+regioni = bwlabel(segmentazione);
+[label_matrix, num_labels]  = bwlabel(segmentazione);
+regionProps = regionprops(label_matrix, 'Centroid', 'Area');
+
+for i = 1:num_labels
   label_area = labels_areas(i);
-  % Trova le coordinate dei centri delle regioni
-  [y, x] = find(segmentazione == label_area);
-  centro_x = mean(x);
-  centro_y = mean(y);
-  
   % Stampa l'area sulla regione
-  text(centro_x, centro_y, sprintf('Area: %d', labels_areas(i)), 'Color', 'red');
+  text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d', regionProps(i).Area), 'Color', 'red');
 end
 
 
