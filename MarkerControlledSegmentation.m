@@ -1,26 +1,10 @@
 % Carica l'immagine MRI del polmone
 img = imread('imagesProject\tumore1.png');
 
-%if size(img, 3) == 3
-%    img = rgb2gray(img);
-%end
-
 img = Helpers.rgb2gray(img);
 
-% Pre-processamento dell'immagine (ad esempio, riduzione del rumore, miglioramento del contrasto)
-%img_preprocessed = imadjust(img);
-
-% Definiamo la larghezza desiderata della nuova immagine
-new_width = 700;
-
-% Calcoliamo la nuova altezza proporzionale b:h=B:H
-original_size = size(img);
-new_height = round(new_width * original_size(1) / original_size(2));
-
 % Ridimensionamento dell'immagine
-new_size = [new_height, new_width];
-img_resized = imresize(img, new_size);
-
+img_resized = Helpers.resize(img, 700);
 % Applicazione dell'operatore Sobel per migliorare i gradienti lungo gli assi orizzontali e verticali
 sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
 sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]; % Sobel kernel per Gy
@@ -38,10 +22,7 @@ gradiente_magnitudine = sqrt(gradiente_x.^2 + gradiente_y.^2);
 % Calcolo dell'angolo del gradiente
 %gradiente_angolo = atan2(gradiente_y, gradiente_x);
 
-% Visualizzazione dell'immagine originale e del gradiente magnitudine
-figure;
-subplot(1, 2, 1), imshow(img), title('Immagine originale');
-subplot(1, 2, 2), imshow(gradiente_magnitudine, []), title('Gradiente Magnitudine');
+Helpers.imsshow({img,gradiente_magnitudine}, {'Immagine originale', 'Gradiente Magnitudine'});
 
 % Trova i minimi locali nell'immagine del gradiente
 marcatori_interni = imregionalmin(gradiente_magnitudine);
@@ -56,10 +37,7 @@ marcatori = imimposemin(gradiente_magnitudine, marcatori_interni | marcatori_est
 % Calcola la segmentazione watershed
 segmentazione = watershed(marcatori, 8);
 
-% Visualizza l'immagine originale e la segmentazione
-figure;
-subplot(1, 2, 1), imshow(img_resized), title('Immagine originale');
-subplot(1, 2, 2), imshow(label2rgb(segmentazione)), title('Segmentazione Watershed');
+Helpers.imsshow({img_resized,label2rgb(segmentazione)}, {'Immagine originale', 'Segmentazione Watershed'});
 
 % Calcola l'area del tumore utilizzando l'analisi dei componenti connessi
 regioni = bwlabel(segmentazione);
@@ -67,24 +45,3 @@ tumore_area = max(histcounts(regioni, 'BinMethod', 'integers'));
 
 % Visualizza l'area del tumore
 disp(['L''area del tumore è: ', num2str(tumore_area), ' pixel']);
-
-imshow(gradiente_totale);
-% Identificazione dei marcatori (ad esempio, usando la ricerca dei massimi locali)
-marcatori = imregionalmax(gradiente_totale);
-
-% Definizione delle regioni di sfondo
-sfondo = imopen(img_resized, strel('disk', 15));
-
-% Calcolo delle distanze euclidee dai marcatori ai pixel dell'immagine
-dist = bwdist(~marcatori);
-
-% Segmentazione Marker Controlled
-seg = watershed(dist);
-
-% Applicazione delle regioni di sfondo alla segmentazione
-seg(~marcatori) = 0;
-
-% Visualizzazione dei risultati
-figure;
-subplot(1,2,1), imshow(img), title('Immagine MRI del polmone');
-subplot(1,2,2), imshow(label2rgb(seg)), title('Segmentazione dei tumori');
