@@ -1,6 +1,27 @@
 classdef Helpers
     
     methods(Static)
+
+        function plotBinaryImageScatter(immagine_binaria)
+
+             % Controlla se l'input è una matrice valida
+            if ~ismatrix(immagine_binaria) || ~islogical(immagine_binaria)
+              error('Errore: L''input deve essere una matrice binaria (0 e 1).');
+            end
+    
+            % Trova le coordinate dei pixel con valore 1
+            [y, x] = find(immagine_binaria);
+    
+            % Genera il grafico a dispersione
+            figure;
+            scatter(x, y, 'filled');
+            colormap('gray');  % Distingue 0 e 1
+            axis equal;  % Mantiene le proporzioni dell'immagine
+            xlabel('Colonna');
+            ylabel('Riga');
+            title('Grafico a dispersione dell''immagine binaria');  
+        end
+
         function imageResized = resize(img, newWidth)
             % Calcoliamo la nuova altezza proporzionale b:h=B:H
             originalSize = size(img);

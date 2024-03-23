@@ -2,47 +2,89 @@
 img = imread('imagesProject\tumore1.png');
 
 img = Helpers.rgb2gray(img);
-img= imgaussfilt(img, 2);
+
 % Ridimensionamento dell'immagine
-img_resized = Helpers.resize(img, 770);
+preprocessedImg = Helpers.resize(img, 770);
+preprocessedImg = wiener2(preprocessedImg);
+
+% Miglioramento del contrasto
+preprocessedImg = imadjust(preprocessedImg);
+
+
+se = strel("diamond",5);
+marker = imerode(preprocessedImg,se);
+preprocessedImg = imreconstruct(marker ,preprocessedImg);
+ 
+preprocessedImg = imgaussfilt(preprocessedImg, 3);
+Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
 % Applicazione dell'operatore Sobel per migliorare i gradienti lungo gli assi orizzontali e verticali
-sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
-sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]; % Sobel kernel per Gy
+%sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
+%sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]; % Sobel kernel per Gy
+
+% Calcolo del gradiente con Sobel
+[Gx, Gy] = imgradientxy(preprocessedImg, 'Sobel'); % Example: Sobel gradient
+gradiente_magnitude = sqrt(Gx.^2 + Gy.^2);
+
+
+% Marcatori interni - puoi modificarli per selezione manuale
+internal_markers = imclose(img > 0.8, ones(3,3)); % Esempio di thresholding
+
+% Distanza trasformata dei marcatori interni
+distance_transform = bwdist(internal_markers);
+ 
+% Marcatori esterni - sfruttando la distanza trasformata
+external_markers = distance_transform == round(max(distance_transform(:))/2);
+
+% Combina marcatori interni ed esterni
+markers = internal_markers | external_markers;
+
+% Unisci i marcatori interni ed esterni
+marcatori = imimposemin(gradiente_magnitude, markers);
+
+% Calcola la segmentazione watershed
+segmentazione = watershed(marcatori)
+
+% Post-processing (rimuovi piccoli oggetti opzionale)
+% segmented_img = bwareaopen(segmented_img, 100);
+
+% Colora il tumore (etichette assegnate in base ai marcatori)
+colored_img = label2rgb(segmentazione);
+
+% Visualizza l'immagine segmentata
+imshow(colored_img)
+
 
 % Applicazione della convoluzione dell'immagine con i kernel Sobel
-gradiente_x = imfilter(double(img_resized), sobel_x);
-gradiente_y = imfilter(double(img_resized), sobel_y);
+%gradiente_x = imfilter(double(preprocessedImg), sobel_x);
+%gradiente_y = imfilter(double(preprocessedImg), sobel_y);
 
 % Calcolo del gradiente totale utilizzando la magnitudine del gradiente
-gradiente_magnitudine = sqrt(gradiente_x.^2 + gradiente_y.^2);
+%gradienteMagnitudine = sqrt(gradiente_x.^2 + gradiente_y.^2);
 
 % Calcolo dell'angolo del gradiente
 %gradiente_angolo = atan2(gradiente_y, gradiente_x);
 
 % TODO: minimi o massimi nell'articolo. Trova i massimi locali nell'immagine del gradiente   
-marcatori_interni = imregionalmax(gradiente_magnitudine);
+%internalMarkers  = imregionalmax(gradienteMagnitude, 6);
 
 % Trova i marcatori esterni
-distanza_trasformata = bwdist(marcatori_interni);
-marcatori_esterni = imextendedmin(distanza_trasformata, 0.1);
-
-% Unisci i marcatori interni ed esterni
-marcatori = imimposemin(gradiente_magnitudine, marcatori_interni | marcatori_esterni);
-
-% Calcola la segmentazione watershed
-segmentazione = watershed(marcatori, 8);
+distanceTransform  = bwdist(internalMarkers);
 
 
-%Helpers.imsshow({img, gradiente_magnitudine, label2rgb(segmentazione)}, {'Immagine originale', 'Gradiente Magnitudine', 'Segmentazione Watershed'});
+% Marcatori esterni - sfruttando la distanza trasformata
+external_markers = distance_transform == round(max(distance_transform(:))/2);
 
-% Visualizzazione dell'immagine originale e del gradiente magnitudine
-figure;
-subplot(1, 2, 1), imshow(img), title('Immagine originale');
-subplot(1, 2, 2), imshow(gradiente_magnitudine, []), title('Gradiente Magnitudine');
-% Visualizza l'immagine originale e la segmentazione
-figure;
-subplot(1, 2, 1), imshow(img_resized), title('Immagine originale');
-subplot(1, 2, 2), imshow(label2rgb(segmentazione)), title('Segmentazione Watershed');
+externalMarkers = imregionalmin(distanceTransform);
+
+Helpers.imsshow({img, label}, {'Immagine originale', 'Segmentazione Watershed'});
+
+figure
+imshow(img)
+hold on
+overlaySeg = imshow(label);
+overlaySeg.AlphaData = 0.3;
+title("Colored Labels Superimposed Transparently on Original Image")
+
 % Calcola l'area del tumore utilizzando l'analisi dei componenti connessi
 regioni = bwlabel(segmentazione);
 tumore_area = max(histcounts(regioni, 'BinMethod', 'integers'));

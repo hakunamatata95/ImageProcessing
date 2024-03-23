@@ -2,42 +2,84 @@
 img = imread('imagesProject\tumore1.png');
 
 img = Helpers.rgb2gray(img);
-img= imgaussfilt(img, 2);
+
 % Ridimensionamento dell'immagine
-img_resized = Helpers.resize(img, 770);
+preprocessedImg = Helpers.resize(img, 770);
+preprocessedImg = wiener2(preprocessedImg);
+
+ 
+
+se = strel("diamond",4);
+marker = imerode(preprocessedImg,se);
+preprocessedImg = imreconstruct(marker ,preprocessedImg);
+
+Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
 % Applicazione dell'operatore Sobel per migliorare i gradienti lungo gli assi orizzontali e verticali
 sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
 sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]; % Sobel kernel per Gy
 
 % Applicazione della convoluzione dell'immagine con i kernel Sobel
-gradiente_x = imfilter(double(img_resized), sobel_x);
-gradiente_y = imfilter(double(img_resized), sobel_y);
+gradiente_x = imfilter(double(preprocessedImg), sobel_x);
+gradiente_y = imfilter(double(preprocessedImg), sobel_y);
+
+% Calcolo del gradiente con Sobel
+gradient_magnitude = sqrt(gradiente_x.^2 + gradiente_y.^2);
+
+% Definizione dei marcatori
+markers = zeros(size(preprocessedImg));
+
+% Marcatori interni (ad esempio, basati sull'intensità)
+soglia_intensita = 80; % Regola questo valore in base all'immagine
+markers(preprocessedImg > soglia_intensita) = 1;
+
+% Marcatori esterni (ad esempio, basati sulla distanza)
+distanza_margine = 0.005; % Regola questo valore in base alle dimensioni del tumore
+markers(bwdist(imdilate(markers, strel('diamond', 1))) <= distanza_margine) = 2;
+
+modified_gradient = imimposemin(gradient_magnitude, markers);
+% Segmentazione watershed
+segmentazione = watershed(modified_gradient);
+% Post-processing (rimuovi piccoli oggetti opzionale)
+% segmented_img = bwareaopen(segmented_img, 100);
+
+% Colora il tumore (etichette assegnate in base ai marcatori)
+colored_img = label2rgb(segmentazione);
+
+Helpers.plotBinaryImageScatter(logical(segmentazione));
+imshow(segmentazione);
+% Visualizza l'immagine segmentata
+imshow(colored_img)
 
 % Calcolo del gradiente totale utilizzando la magnitudine del gradiente
-gradiente_magnitudine = sqrt(gradiente_x.^2 + gradiente_y.^2);
+%gradienteMagnitudine = sqrt(gradiente_x.^2 + gradiente_y.^2);
 
 % Calcolo dell'angolo del gradiente
 %gradiente_angolo = atan2(gradiente_y, gradiente_x);
 
 % TODO: minimi o massimi nell'articolo. Trova i massimi locali nell'immagine del gradiente   
-marcatori_interni = imregionalmax(gradiente_magnitudine);
+%internalMarkers  = imregionalmax(gradienteMagnitude, 6);
 
-% Trova i marcatori esterni
-distanza_trasformata = bwdist(marcatori_interni);
-marcatori_esterni = imextendedmin(distanza_trasformata, 0.1);
-
-% Unisci i marcatori interni ed esterni
-marcatori = imimposemin(gradiente_magnitudine, marcatori_interni | marcatori_esterni);
-
-% Calcola la segmentazione watershed
-segmentazione = watershed(marcatori, 8);
-
-
-Helpers.imsshow({img, label2rgb(segmentazione)}, {'Immagine originale', 'Segmentazione Watershed'});
+figure
+imshow(img)
+hold on
+overlaySeg = imshow(colored_img);
+overlaySeg.AlphaData = 0.5;
+title("Colored Labels Superimposed Transparently on Original Image");
 
 % Calcola l'area del tumore utilizzando l'analisi dei componenti connessi
 regioni = bwlabel(segmentazione);
-tumore_area = max(histcounts(regioni, 'BinMethod', 'integers'));
+labels_areas = histcounts(regioni, 'BinMethod', 'integers');
 
-% Visualizza l'area del tumore
-disp(['L''area del tumore è: ', num2str(tumore_area), ' pixel']);
+for i = 1:length(labels_areas)
+  label_area = labels_areas(i);
+  % Trova le coordinate dei centri delle regioni
+  [y, x] = find(segmentazione == label_area);
+  centro_x = mean(x);
+  centro_y = mean(y);
+  
+  % Stampa l'area sulla regione
+  text(centro_x, centro_y, sprintf('Area: %d', labels_areas(i)), 'Color', 'red');
+end
+
+
+ 
