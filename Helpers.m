@@ -2,26 +2,6 @@ classdef Helpers
     
     methods(Static)
 
-        function plotBinaryImageScatter(immagine_binaria)
-
-             % Controlla se l'input è una matrice valida
-            if ~ismatrix(immagine_binaria) || ~islogical(immagine_binaria)
-              error('Errore: L''input deve essere una matrice binaria (0 e 1).');
-            end
-    
-            % Trova le coordinate dei pixel con valore 1
-            [y, x] = find(immagine_binaria);
-    
-            % Genera il grafico a dispersione
-            figure;
-            scatter(x, y, 'filled');
-            colormap('gray');  % Distingue 0 e 1
-            axis equal;  % Mantiene le proporzioni dell'immagine
-            xlabel('Colonna');
-            ylabel('Riga');
-            title('Grafico a dispersione dell''immagine binaria');  
-        end
-
         function imageResized = resize(img, newWidth)
             % Calcoliamo la nuova altezza proporzionale b:h=B:H
             originalSize = size(img);
@@ -32,10 +12,36 @@ classdef Helpers
             imageResized = imresize(img, new_size);
         end
 
+        %TODO: rivedere il nome del metodo
         function binImage = otsubin(image)
             image = Helpers.rgb2gray(image);
             greyLevel = graythresh(image);
             binImage = imbinarize(image, greyLevel);
+        end
+
+        function depth = search_max_region_in_label(mri)
+            depth = 0;
+            maxArea = 0;
+            for i = 1 : size(mri, 2)
+                extractedImage = Helpers.extractyimage(mri, i);
+                extractedImageBin = Helpers.otsubin(extractedImage);
+                [regions, num_labels] = bwlabel(extractedImageBin);
+                
+                props = regionprops(regions, 'Area');
+                for j = 1 : num_labels
+                    if props(j).Area > maxArea
+                        maxArea = props(j).Area;
+                        depth = i;
+                    end
+                end
+            end
+        end 
+
+        function imageFromMRI = extractyimage(mri, depth)
+            if depth < -size(mri, 2) || depth > size(mri, 2)
+                error('Depth is wrong'); 
+            end
+            imageFromMRI = squeeze(mri(:, depth, :));
         end
 
         function show3dimage(img)

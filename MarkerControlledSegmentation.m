@@ -53,7 +53,6 @@ overlaySeg = imshow(colored_img);
 overlaySeg.AlphaData = 0.5;
 title("Colored Labels Superimposed Transparently on Original Image");
 
-regioni = bwlabel(segmentazione);
 [label_matrix, num_labels]  = bwlabel(segmentazione);
 regionProps = regionprops(label_matrix, 'Centroid', 'Area');
 
