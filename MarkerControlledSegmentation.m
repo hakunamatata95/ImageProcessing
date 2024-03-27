@@ -7,13 +7,11 @@ img = Helpers.rgb2gray(img);
 preprocessedImg = Helpers.resize(img, 770);
 preprocessedImg = wiener2(preprocessedImg);
 
- 
-
 se = strel("diamond",4);
 marker = imerode(preprocessedImg,se);
 preprocessedImg = imreconstruct(marker ,preprocessedImg);
 
-Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
+%Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
 % Applicazione dell'operatore Sobel per migliorare i gradienti lungo gli assi orizzontali e verticali
 sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
 sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]; % Sobel kernel per Gy
@@ -39,8 +37,6 @@ markers(bwdist(imdilate(markers, strel('diamond', 1))) <= distanza_margine) = 2;
 modified_gradient = imimposemin(gradient_magnitude, markers);
 % Segmentazione watershed
 segmentazione = watershed(modified_gradient);
-% Post-processing (rimuovi piccoli oggetti opzionale)
-% segmented_img = bwareaopen(segmented_img, 100);
 
 % Colora il tumore (etichette assegnate in base ai marcatori)
 colored_img = label2rgb(segmentazione);
@@ -48,16 +44,7 @@ colored_img = label2rgb(segmentazione);
 Helpers.plotBinaryImageScatter(logical(segmentazione));
 imshow(segmentazione);
 % Visualizza l'immagine segmentata
-imshow(colored_img)
-
-% Calcolo del gradiente totale utilizzando la magnitudine del gradiente
-%gradienteMagnitudine = sqrt(gradiente_x.^2 + gradiente_y.^2);
-
-% Calcolo dell'angolo del gradiente
-%gradiente_angolo = atan2(gradiente_y, gradiente_x);
-
-% TODO: minimi o massimi nell'articolo. Trova i massimi locali nell'immagine del gradiente   
-%internalMarkers  = imregionalmax(gradienteMagnitude, 6);
+%imshow(colored_img)
 
 figure
 imshow(img)
@@ -66,17 +53,11 @@ overlaySeg = imshow(colored_img);
 overlaySeg.AlphaData = 0.5;
 title("Colored Labels Superimposed Transparently on Original Image");
 
-% Calcola l'area del tumore utilizzando l'analisi dei componenti connessi
-regioni = bwlabel(segmentazione);
-labels_areas = histcounts(regioni, 'BinMethod', 'integers');
-
 regioni = bwlabel(segmentazione);
 [label_matrix, num_labels]  = bwlabel(segmentazione);
 regionProps = regionprops(label_matrix, 'Centroid', 'Area');
 
 for i = 1:num_labels
-  label_area = labels_areas(i);
-  % Stampa l'area sulla regione
   text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d', regionProps(i).Area), 'Color', 'red');
 end
 

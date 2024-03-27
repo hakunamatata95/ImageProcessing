@@ -7,87 +7,59 @@ img = Helpers.rgb2gray(img);
 preprocessedImg = Helpers.resize(img, 770);
 preprocessedImg = wiener2(preprocessedImg);
 
-% Miglioramento del contrasto
-preprocessedImg = imadjust(preprocessedImg);
-
-
-se = strel("diamond",5);
+se = strel("diamond",4);
 marker = imerode(preprocessedImg,se);
 preprocessedImg = imreconstruct(marker ,preprocessedImg);
- 
-preprocessedImg = imgaussfilt(preprocessedImg, 3);
+
 Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
 % Applicazione dell'operatore Sobel per migliorare i gradienti lungo gli assi orizzontali e verticali
-%sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
-%sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]; % Sobel kernel per Gy
+sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
+sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]; % Sobel kernel per Gy
+
+% Applicazione della convoluzione dell'immagine con i kernel Sobel
+gradiente_x = imfilter(double(preprocessedImg), sobel_x);
+gradiente_y = imfilter(double(preprocessedImg), sobel_y);
 
 % Calcolo del gradiente con Sobel
-[Gx, Gy] = imgradientxy(preprocessedImg, 'Sobel'); % Example: Sobel gradient
-gradiente_magnitude = sqrt(Gx.^2 + Gy.^2);
+gradient_magnitude = sqrt(gradiente_x.^2 + gradiente_y.^2);
 
+% Definizione dei marcatori
+markers = zeros(size(preprocessedImg));
 
-% Marcatori interni - puoi modificarli per selezione manuale
-internal_markers = imclose(img > 0.8, ones(3,3)); % Esempio di thresholding
+% Marcatori interni (ad esempio, basati sull'intensità)
+soglia_intensita = 80; % Regola questo valore in base all'immagine
+markers(preprocessedImg > soglia_intensita) = 1;
 
-% Distanza trasformata dei marcatori interni
-distance_transform = bwdist(internal_markers);
- 
-% Marcatori esterni - sfruttando la distanza trasformata
-external_markers = distance_transform == round(max(distance_transform(:))/2);
+% Marcatori esterni (ad esempio, basati sulla distanza)
+distanza_margine = 0.005; % Regola questo valore in base alle dimensioni del tumore
+markers(bwdist(imdilate(markers, strel('diamond', 1))) <= distanza_margine) = 2;
 
-% Combina marcatori interni ed esterni
-markers = internal_markers | external_markers;
-
-% Unisci i marcatori interni ed esterni
-marcatori = imimposemin(gradiente_magnitude, markers);
-
-% Calcola la segmentazione watershed
-segmentazione = watershed(marcatori)
-
-% Post-processing (rimuovi piccoli oggetti opzionale)
-% segmented_img = bwareaopen(segmented_img, 100);
+modified_gradient = imimposemin(gradient_magnitude, markers);
+% Segmentazione watershed
+segmentazione = watershed(modified_gradient);
 
 % Colora il tumore (etichette assegnate in base ai marcatori)
 colored_img = label2rgb(segmentazione);
 
+Helpers.plotBinaryImageScatter(logical(segmentazione));
+imshow(segmentazione);
 % Visualizza l'immagine segmentata
 imshow(colored_img)
-
-
-% Applicazione della convoluzione dell'immagine con i kernel Sobel
-%gradiente_x = imfilter(double(preprocessedImg), sobel_x);
-%gradiente_y = imfilter(double(preprocessedImg), sobel_y);
-
-% Calcolo del gradiente totale utilizzando la magnitudine del gradiente
-%gradienteMagnitudine = sqrt(gradiente_x.^2 + gradiente_y.^2);
-
-% Calcolo dell'angolo del gradiente
-%gradiente_angolo = atan2(gradiente_y, gradiente_x);
-
-% TODO: minimi o massimi nell'articolo. Trova i massimi locali nell'immagine del gradiente   
-%internalMarkers  = imregionalmax(gradienteMagnitude, 6);
-
-% Trova i marcatori esterni
-distanceTransform  = bwdist(internalMarkers);
-
-
-% Marcatori esterni - sfruttando la distanza trasformata
-external_markers = distance_transform == round(max(distance_transform(:))/2);
-
-externalMarkers = imregionalmin(distanceTransform);
-
-Helpers.imsshow({img, label}, {'Immagine originale', 'Segmentazione Watershed'});
 
 figure
 imshow(img)
 hold on
-overlaySeg = imshow(label);
-overlaySeg.AlphaData = 0.3;
-title("Colored Labels Superimposed Transparently on Original Image")
+overlaySeg = imshow(colored_img);
+overlaySeg.AlphaData = 0.5;
+title("Colored Labels Superimposed Transparently on Original Image");
 
-% Calcola l'area del tumore utilizzando l'analisi dei componenti connessi
 regioni = bwlabel(segmentazione);
-tumore_area = max(histcounts(regioni, 'BinMethod', 'integers'));
+[label_matrix, num_labels]  = bwlabel(segmentazione);
+regionProps = regionprops(label_matrix, 'Centroid', 'Area');
 
-% Visualizza l'area del tumore
-disp(['L''area del tumore è: ', num2str(tumore_area), ' pixel']);
+for i = 1:num_labels
+  text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d', regionProps(i).Area), 'Color', 'red');
+end
+
+
+ 
