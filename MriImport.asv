@@ -8,7 +8,8 @@ depth = Helpers.search_max_region_in_label(label);
 mri = niftiread('Task06_Lung\imagesTr\lung_095.nii.gz');
 info = niftiinfo('Task06_Lung\imagesTr\lung_095.nii.gz');
 img = Helpers.extractyimage(mri, depth);
-
+% Imposta l'aspetto degli assi in base alle dimensioni dei pixel
+pixel_aspect_ratio = info.PixelDimensions(1) / info.PixelDimensions(2); % Rapporto tra larghezza e altezza dei pixel
   
 imshow(imrotate(img, 90),[]);
 
