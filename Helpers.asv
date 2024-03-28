@@ -42,26 +42,37 @@ classdef Helpers
                 error('Depth is wrong'); 
             end
             %sqeeze rimuove le dimensioni unitarie quindi rende la
-            %dimensione dell'immagine da MxYxN a MxN per Y=1
-            imageFromMRI = squeeze(mri(:, depth, :));
+            %dimensione dell'immagine da MxYxN a MxN con Y=1
+            %imageFromMRI = squeeze(mri(:, depth, :));
+            imageFromMRI = reshape(imrotate(mri(:, depth, :)), [dim(2) dim(3)]);
 
             %ELENCO PIANI
             %frontal = squeeze(mri(:, :, depth));
-            %sagittal = squeeze(mri(depth, :, :));
-            %horizontal = squeeze(mri(:, depth, :));
+            %sagittal = reshape(mri(depth, :, :), [dim(2) dim(3)]);
+            %horizontal = reshape(mri(:, depth, :), [dim(1) dim(3)]);
         end
 
-        function show3dimage(img)
+        function show3dimage(mri)
+            %TODO: impostare depth a parametro input
+            depth1 = round(size(img, 3)/2);
+            depth2 = round(size(img, 2)/2);
+            depth3 = round(size(img, 1)/2);
+
+            horizontal = reshape(mri(:, depth3, :), [dim(1) dim(3)]);
+            frontal = squeeze(mri(:, :, depth1));
+            sagittal = reshape(mri(depth2, :, :), [dim(2) dim(3)]);
+            
+
             figure;
             subplot(1,3,1);
-            imshow(squeeze(img(:, :, round(size(img, 3)/2))), []);
-            title('Piano mediano (X)');
+            imshow(imrotate(frontal, -90), []);
+            title('Piano mediano frontal');
             subplot(1,3,2);
-            imshow(squeeze(img(:, round(size(img, 2)/2), :)), []);
-            title('Piano mediano (Y)');
+            imshow(imrotate(sagittal, -90), []);
+            title('Piano mediano sagittal');
             subplot(1,3,3);
-            imshow(squeeze(img(round(size(img, 1)/2), :, :)), []);
-            title('Piano mediano (Z)');
+            imshow(imrotate(horizontal, -90), []);
+            title('Piano mediano horizontal');
         end  
 
         function imsshow(arrayImgs, namesImgs)
