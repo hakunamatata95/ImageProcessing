@@ -1,17 +1,66 @@
 classdef Helpers
     
     methods(Static)
-        function [imageTraining, imagelabel] = datasetimport(labelPath, imagePath)
+
+        function datasetfolderstructuring(mrisTrainingPath, mrisLabelPath)
+            baseFolder = 'Dataset';
+            % Creazione della cartella
+            if ~exist(baseFolder, 'dir')
+                mkdir(baseFolder);
+            end
+            
+            % Salva un'immagine nella cartella appena creata
+            trainingFileNames = Helpers.elenca_file_con_prefisso(mrisTrainingPath, 'lung');
+            labelFileNames = Helpers.elenca_file_con_prefisso(mrisLabelPath, 'lung');
+
+            for i = 1 : size(trainingFileNames,2)
+                exampleFolderName = fullfile(baseFolder, char(strtok(trainingFileNames(1), ".")));
+                if ~exist(exampleFolderName, 'dir')
+                    mkdir(exampleFolderName);
+                end
+                
+                [trainingImage,labelImage] = Helpers.calculate_images_for_training_and_label(fullfile(mrisTrainingPath, char(trainingFileNames(i))), ...
+                    fullfile(mrisLabelPath , '\' , char(trainingFileNames(i))));
+
+                if ~exist(exampleFolderName, 'dir')
+                    mkdir(exampleFolderName);
+                else
+                    rmdir(exampleFolderName, 's');
+                    mkdir(exampleFolderName);
+                end
+
+                imwrite(trainingImage, fullfile(baseFolder,  ,'a.jpg'), 'jpg');
+                imwrite(labelImage, fullfile(baseFolder,  ,'b.jpg'), 'jpg');
+            end
+            
+
+           
+        end
+        
+        function fileNames = elenca_file_con_prefisso(folderPath, prefisso)
+             % Ottieni una lista di tutti i file nella cartella specificata
+             listaFiles = dir(fullfile(folderPath, [prefisso, '*']));
+            
+             % Estrai i nomi dei file dalla struttura 'listaFiles'
+             fileNames = {listaFiles.name};
+        end
+
+
+        function [imageTraining, imageLabel] = calculate_images_for_training_and_label(imagePath, labelPath)
             % Calcoliamo la nuova proporzione in base ai dati niftiread
             label = niftiread(labelPath);
-            [imagelabel, depth] = Helpers.search_max_region_in_label(label); 
-            imagelabel11 = Helpers.extractyimage(mri, depth);
-            mri = niftiread(imagePath);
-            info = niftiinfo(imagePath);
-            img = Helpers.extractyimage(mri, depth);
+            [imageLabel, depth] = Helpers.search_max_region_in_label(label); 
+             
+            imageTraining = niftiread(imagePath);
+            infoTraining = niftiinfo(imagePath);
+            imageTraining = Helpers.extractyimage(imageTraining, depth);
    
-            imageTraining = imrotate(Helpers.mriproportionadjustement(img, info), 90); 
+            imageTraining = imrotate(Helpers.mriproportionadjustement(imageTraining, infoTraining), 90); 
             imageTraining = Helpers.imagenormalize(imageTraining);
+ 
+            infoLabel = niftiinfo(labelPath);
+
+            imageLabel = imrotate(Helpers.mriproportionadjustement(imageLabel, infoLabel), 90);
         end
         
         function image_corrected = mriproportionadjustement(image, info)
@@ -58,7 +107,7 @@ classdef Helpers
                     if props(j).Area > maxArea
                         maxArea = props(j).Area;
                         depth = i;
-                        image = extractedImage;
+                        image = extractedImageBin;
                     end
                 end
             end

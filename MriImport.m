@@ -14,11 +14,7 @@ close all;
 %B = imresize(A,scale)
  
 
-[a,b] = Helpers.datasetimport('Task06_Lung\imagesTr\lung_095.nii.gz', ...
-    'Task06_Lung\labelsTr\lung_095.nii.gz');
-
-
-Helpers.imsshow({a, b}); 
+Helpers.datasetfolderstructuring('Task06_Lung/imagesTr', 'Task06_Lung/labelsTr');
 %imshow(imag, []);
 %normalizzazione min max
 %Vmax= max(mri, [], 'all');
