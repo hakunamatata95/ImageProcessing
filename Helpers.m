@@ -1,7 +1,24 @@
 classdef Helpers
     
     methods(Static)
+        function extractedData = datasetimport(labelPath, imagePath)
+            % Calcoliamo la nuova proporzione in base ai dati niftiread
+            label = niftiread(labelPath);
+            depth = Helpers.search_max_region_in_label(label);
 
+            mri = niftiread(imagePath);
+            info = niftiinfo(imagePath);
+            img = Helpers.extractyimage(mri, depth);
+            colormap gray;
+            imshow(img);
+            x = info.ImageSize(1) * info.PixelDimensions(1);
+            y = info.ImageSize(3) * info.PixelDimensions(3);
+            new_size = [x, y];
+            %imshow(imrotate(img, 90),[]);
+            extractedData = imrotate(imresize(img,new_size), 90);
+            extractedData =  imadjust(extractedData) ;
+        end
+        
         function imageResized = resize(img, newWidth)
             % Calcoliamo la nuova altezza proporzionale b:h=B:H
             originalSize = size(img);
@@ -44,7 +61,7 @@ classdef Helpers
             %sqeeze rimuove le dimensioni unitarie quindi rende la
             %dimensione dell'immagine da MxYxN a MxN per Y=1
             imageFromMRI = squeeze(mri(:, depth, :));
-
+            
             %ELENCO PIANI
             %frontal = squeeze(mri(:, :, depth));
             %sagittal = squeeze(mri(depth, :, :));
