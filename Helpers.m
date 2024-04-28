@@ -1,24 +1,37 @@
 classdef Helpers
     
     methods(Static)
-        function extractedData = datasetimport(labelPath, imagePath)
+        function [imageTraining, imageLabel] = datasetimport(imagePath, labelPath)
             % Calcoliamo la nuova proporzione in base ai dati niftiread
             label = niftiread(labelPath);
-            depth = Helpers.search_max_region_in_label(label);
+            [imageLabel, depth] = Helpers.search_max_region_in_label(label); 
+             
+            imageTraining = niftiread(imagePath);
+            infoTraining = niftiinfo(imagePath);
+            imageTraining = Helpers.extractyimage(imageTraining, depth);
+   
+            imageTraining = imrotate(Helpers.mriproportionadjustement(imageTraining, infoTraining), 90); 
+            imageTraining = Helpers.imagenormalize(imageTraining);
+ 
+            infoLabel = niftiinfo(labelPath);
 
-            mri = niftiread(imagePath);
-            info = niftiinfo(imagePath);
-            img = Helpers.extractyimage(mri, depth);
-            colormap gray;
-            imshow(img);
+            imageLabel = imrotate(Helpers.mriproportionadjustement(imageLabel, infoLabel), 90);
+        end
+        
+        function image_corrected = mriproportionadjustement(image, info)
             x = info.ImageSize(1) * info.PixelDimensions(1);
             y = info.ImageSize(3) * info.PixelDimensions(3);
             new_size = [x, y];
-            %imshow(imrotate(img, 90),[]);
-            extractedData = imrotate(imresize(img,new_size), 90);
-            extractedData =  imadjust(extractedData) ;
+
+            image_corrected = imresize(image,new_size);
         end
-        
+
+        function img_normalized = imagenormalize(image)
+            min_val = min(image(:)); % Trova il valore minimo dei pixel
+            max_val = max(image(:)); % Trova il valore massimo dei pixel
+            img_normalized = (double(image) - min_val) / (max_val - min_val); % Normalizza l'immagine
+        end
+
         function imageResized = resize(img, newWidth)
             % Calcoliamo la nuova altezza proporzionale b:h=B:H
             originalSize = size(img);
@@ -36,7 +49,7 @@ classdef Helpers
             binImage = imbinarize(image, greyLevel);
         end
 
-        function depth = search_max_region_in_label(mri)
+        function [image, depth] = search_max_region_in_label(mri)
             depth = 0;
             maxArea = 0;
             for i = 1 : size(mri, 2)
@@ -49,9 +62,11 @@ classdef Helpers
                     if props(j).Area > maxArea
                         maxArea = props(j).Area;
                         depth = i;
+                        image = extractedImageBin;
                     end
                 end
             end
+
         end 
 
         function imageFromMRI = extractyimage(mri, depth)
@@ -61,7 +76,7 @@ classdef Helpers
             %sqeeze rimuove le dimensioni unitarie quindi rende la
             %dimensione dell'immagine da MxYxN a MxN per Y=1
             imageFromMRI = squeeze(mri(:, depth, :));
-            
+
             %ELENCO PIANI
             %frontal = squeeze(mri(:, :, depth));
             %sagittal = squeeze(mri(depth, :, :));
