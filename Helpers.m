@@ -19,7 +19,7 @@ classdef Helpers
                 if ~exist(exampleFolderName, 'dir')
                     mkdir(exampleFolderName);
                 end
-                
+                 
                 [trainingImage,labelImage] = Helpers.calculate_images_for_training_and_label(fullfile(mrisTrainingPath, char(trainingFileNames(i))), ...
                     fullfile(mrisLabelPath , char(trainingFileNames(i))));
 
@@ -30,8 +30,8 @@ classdef Helpers
                     mkdir(exampleFolderName);
                 end
 
-                imwrite(trainingImage, fullfile(baseFolder, exampleName ,'trainingImage.jpg'));
-                imwrite(labelImage, fullfile(baseFolder, exampleName ,'labelImage.jpg'));
+                imwrite(trainingImage, fullfile(baseFolder, exampleName ,'trainingImage.png'));
+                imwrite(labelImage, fullfile(baseFolder, exampleName ,'labelImage.png'));
             end
              
         end
@@ -39,7 +39,7 @@ classdef Helpers
         function fileNames = elenca_file_con_prefisso(folderPath, prefisso)
              % Ottieni una lista di tutti i file nella cartella specificata
              listaFiles = dir(fullfile(folderPath, [prefisso, '*']));
-            
+             
              % Estrai i nomi dei file dalla struttura 'listaFiles'
              fileNames = {listaFiles.name};
         end
