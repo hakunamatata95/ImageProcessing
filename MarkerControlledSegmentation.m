@@ -1,3 +1,6 @@
+clear;
+close all;
+
 % Carica l'immagine MRI del polmone
 examplesFolders = Helpers.elenca_file_con_prefisso('Dataset', 'lung');
 
@@ -8,8 +11,8 @@ for j = 1 : size(examplesFolders,2)
     inputImage = Helpers.rgb2gray(inputImage);
     
     % Ridimensionamento dell'immagine
-    preprocessedImg = Helpers.resize(inputImage, 770);
-    preprocessedImg = wiener2(preprocessedImg);
+    inputImage = Helpers.resize(inputImage, 770);
+    preprocessedImg = wiener2(inputImage);
     
     se = strel("diamond",4);
     marker = imerode(preprocessedImg,se);
@@ -31,11 +34,11 @@ for j = 1 : size(examplesFolders,2)
     markers = zeros(size(preprocessedImg));
     
     % Marcatori interni (ad esempio, basati sull'intensità)
-    soglia_intensita = 80; % Regola questo valore in base all'immagine
+    soglia_intensita = 80;
     markers(preprocessedImg > soglia_intensita) = 1;
     
     % Marcatori esterni (ad esempio, basati sulla distanza)
-    distanza_margine = 0.005; % Regola questo valore in base alle dimensioni del tumore
+    distanza_margine = 0.005;
     markers(bwdist(imdilate(markers, strel('diamond', 1))) <= distanza_margine) = 2;
     
     modified_gradient = imimposemin(gradient_magnitude, markers);
@@ -45,7 +48,7 @@ for j = 1 : size(examplesFolders,2)
     % Colora il tumore (etichette assegnate in base ai marcatori)
     colored_img = label2rgb(segmentazione);
     
-    imshow(segmentazione);
+    imshow(segmentazione, []);
     % Visualizza l'immagine segmentata
     %imshow(colored_img)
     
