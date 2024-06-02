@@ -11,12 +11,16 @@ for j = 1 : size(examplesFolders,2)
     inputImage = Helpers.rgb2gray(inputImage);
     
     % Ridimensionamento dell'immagine
-    inputImage = Helpers.resize(inputImage, 770);
-    preprocessedImg = wiener2(inputImage);
+    inputImage = Helpers.resize(inputImage, 256);
+    preprocessedImg = imadjust(inputImage);
+
+    %lung_015 viene rilevato grazie a questo filtro a ottengo un falso
+    %positivo
+    %preprocessedImg = wiener2(preprocessedImg);
     
-    se = strel("diamond", 4);
+    se = strel("diamond", 3);
     marker = imerode(preprocessedImg,se);
-    preprocessedImg = imreconstruct(marker ,preprocessedImg);
+    preprocessedImg = imreconstruct(marker, preprocessedImg);
     
     %Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
     % Applicazione dell'operatore Sobel per migliorare i gradienti lungo gli assi orizzontali e verticali
@@ -34,17 +38,21 @@ for j = 1 : size(examplesFolders,2)
     markers = zeros(size(preprocessedImg));
     
     % Marcatori interni (ad esempio, basati sull'intensità)
-    soglia_intensita = 80;
+    soglia_intensita = 85;
     markers(preprocessedImg > soglia_intensita) = 1;
     
     % Marcatori esterni (ad esempio, basati sulla distanza)
     distanza_margine = 0.005;
     markers(bwdist(imdilate(markers, strel('diamond', 1))) <= distanza_margine) = 2;
+    %markers(bwdist(markers, 'euclidean') <= distanza_margine) = 2;
+    %markers = bwdist(~markers);
+    markersInverted = -markers;
+    modified_gradient = imimposemin(gradient_magnitude, markersInverted);
     
-    modified_gradient = imimposemin(gradient_magnitude, markers);
     % Segmentazione watershed
     segmentazione = watershed(modified_gradient);
-    
+    segmentazione(~markers) = 0;
+
     % Colora il tumore (etichette assegnate in base ai marcatori)
     colored_img = label2rgb(segmentazione);
     
@@ -59,10 +67,10 @@ for j = 1 : size(examplesFolders,2)
     title("Colored Labels Superimposed Transparently on Original Image");
     
     [label_matrix, num_labels]  = bwlabel(segmentazione);
-    regionProps = regionprops(label_matrix, 'Centroid', 'Area');
+    regionProps = regionprops(label_matrix, 'Centroid', 'Area', 'Perimeter');
     
     for i = 1:num_labels
-      text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d', regionProps(i).Area), 'Color', 'red');
+        text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps(i).Area, regionProps(i).Perimeter), 'Color', 'red','FontSize', 10);
     end
     hold off;
     saveas(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));

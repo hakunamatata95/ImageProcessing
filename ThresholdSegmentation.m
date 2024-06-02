@@ -47,11 +47,11 @@ for j = 1 : size(examplesFolders,2)
         % Identifica la regione bianca basata sulle coordinate fornite
 
         region = bwselect(resultImageBin, centroids(i).Centroid(1), centroids(i).Centroid(2));
-        regionProps = regionprops(region, 'Area', 'Perimeter', 'BoundingBox');
+        regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
         
         if ~isempty(regionProps) && (regionProps.Area > 600 || regionProps.Perimeter > 250)
             region = bwselect(occurrences, centroids(i).Centroid(1), centroids(i).Centroid(2));
-            regionProps = regionprops(region, 'Area', 'Perimeter', 'BoundingBox');
+            regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
         end 
 
         % Trova il perimetro della parte bianca dell'immagine binarizzata
@@ -63,12 +63,10 @@ for j = 1 : size(examplesFolders,2)
         end
     
         %.BoundingBox sono [x, y, width, height]
-        if ~isempty(regionProps) && isfield(regionProps, 'BoundingBox')
-            boundingBox = regionProps.BoundingBox;
-        text(boundingBox(1) , boundingBox(2) - 10, ...
-            ['Area: ' num2str(regionProps.Area)], 'Color', 'yellow', 'FontSize', 10);
-        text(boundingBox(1), boundingBox(2) + boundingBox(4) + 10, ...
-            ['Perimeter: ' num2str(regionProps.Perimeter)], 'Color', 'yellow', 'FontSize', 10);
+        if ~isempty(regionProps)
+            text(regionProps.Centroid(1), regionProps.Centroid(2), ...
+                sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'yellow', 'FontSize', 10);
+        
         disp([' idxs: ' folderToSave  ' ' num2str(i) ' Area: ' num2str(regionProps.Area) ' Perimeter: ' num2str(regionProps.Perimeter)]);
         end 
     end
