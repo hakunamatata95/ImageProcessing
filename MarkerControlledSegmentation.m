@@ -14,7 +14,7 @@ for j = 1 : size(examplesFolders,2)
     inputImage = Helpers.resize(inputImage, 770);
     preprocessedImg = wiener2(inputImage);
     
-    se = strel("diamond",4);
+    se = strel("diamond", 4);
     marker = imerode(preprocessedImg,se);
     preprocessedImg = imreconstruct(marker ,preprocessedImg);
     
