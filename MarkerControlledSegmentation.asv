@@ -18,18 +18,18 @@ for j = 1 : size(examplesFolders,2)
     %positivo
     %preprocessedImg = wiener2(preprocessedImg);
     
-    %OPENING-BY-RECONSTRUCTION usa imerode e imreconstruct. 
+    %opening-by-reconstruction usa imerode e imreconstruct. 
     %È un'erosione seguita da una ricostruzione morfologica
     se = strel("diamond", 3);
     marker = imerode(preprocessedImg,se);
     preprocessedImg = imreconstruct(marker, preprocessedImg);
-    %
 
-    %OPENING è un'erosione seguita da una dilatazione.
-    %se = strel("diamond", 3);
-    %marker = imopen(preprocessedImg,se);
-    %
-
+    %opening è un'erosione seguita da una dilatazione.
+    se = strel("diamond", 3);
+    marker = imerode(preprocessedImg,se);
+    preprocessedImg = imreconstruct(marker, preprocessedImg);
+    
+    
     %Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
     % Applicazione dell'operatore Sobel per migliorare i gradienti lungo gli assi orizzontali e verticali
     sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
