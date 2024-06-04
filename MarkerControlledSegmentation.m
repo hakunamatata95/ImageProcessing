@@ -34,6 +34,10 @@ for j = 1 : size(examplesFolders,2)
     % Calcolo del gradiente con Sobel
     gradient_magnitude = sqrt(gradiente_x.^2 + gradiente_y.^2);
     
+    %oversegmentation
+    %oversegmentation = watershed(gradient_magnitude);
+    
+    
     % Definizione dei marcatori
     markers = zeros(size(preprocessedImg));
     
