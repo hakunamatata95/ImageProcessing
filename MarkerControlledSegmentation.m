@@ -20,14 +20,14 @@ for j = 1 : size(examplesFolders,2)
     
     %OPENING-BY-RECONSTRUCTION usa imerode e imreconstruct. 
     %È un'erosione seguita da una ricostruzione morfologica
-    se = strel("diamond", 3);
-    marker = imerode(preprocessedImg,se);
-    preprocessedImg = imreconstruct(marker, preprocessedImg);
+    %se = strel("diamond", 3);
+    %marker = imerode(preprocessedImg,se);
+    %preprocessedImg = imreconstruct(marker, preprocessedImg);
     %
 
     %OPENING è un'erosione seguita da una dilatazione.
-    %se = strel("diamond", 3);
-    %marker = imopen(preprocessedImg,se);
+    se = strel("diamond", 3);
+    preprocessedImg = imopen(preprocessedImg,se);
     %
 
     %Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
@@ -50,7 +50,10 @@ for j = 1 : size(examplesFolders,2)
     markers = zeros(size(preprocessedImg));
     
     % Marcatori interni (ad esempio, basati sull'intensità)
-    soglia_intensita = 85;
+    %Per OPENING-BY-RECONSTRUCTION
+    %soglia_intensita = 85;
+    %Per OPENING
+    soglia_intensita = 100;
     markers(preprocessedImg > soglia_intensita) = 1;
     
     % Marcatori esterni (ad esempio, basati sulla distanza)
