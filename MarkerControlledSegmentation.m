@@ -6,88 +6,89 @@ examplesFolders = Helpers.elenca_file_con_prefisso('Dataset', 'lung');
 
 
 for j = 1 : size(examplesFolders,2)
+    %folderToSave = fullfile('Dataset', examplesFolders(j));
     folderToSave = fullfile('Dataset', examplesFolders(j));
     inputImage  = imread(char(fullfile(folderToSave, 'trainingImage.png')));
     inputImage = Helpers.rgb2gray(inputImage);
     
     % Ridimensionamento dell'immagine
     inputImage = Helpers.resize(inputImage, 256);
-    preprocessedImg = imadjust(inputImage);
-
-    %lung_015 viene rilevato grazie a questo filtro a ottengo un falso
-    %positivo
-    %preprocessedImg = wiener2(preprocessedImg);
     
-    %OPENING-BY-RECONSTRUCTION usa imerode e imreconstruct. 
-    %È un'erosione seguita da una ricostruzione morfologica
-    %se = strel("diamond", 3);
-    %marker = imerode(preprocessedImg,se);
-    %preprocessedImg = imreconstruct(marker, preprocessedImg);
-    %
-
-    %OPENING è un'erosione seguita da una dilatazione.
     se = strel("diamond", 3);
-    preprocessedImg = imopen(preprocessedImg,se);
-    %
+    Ie = imerode(inputImage,se);
+    Iobr = imreconstruct(Ie, inputImage);
 
-    %Helpers.imsshow({img, preprocessedImg}, {'Original Image', 'After preprocessingImage'});
-    % Applicazione dell'operatore Sobel per migliorare i gradienti lungo gli assi orizzontali e verticali
+    Iobrd = imdilate(Iobr,se);
+    Iobrcbr = imreconstruct(imcomplement(Iobrd),imcomplement(Iobr));
+    Iobrcbr = imcomplement(Iobrcbr);
+    
+  %CALCOLO GRADIENTE
+
+    %[gmag_alternativo, gdir_alternativo] = imgradient(I);
+
+    % Matrici di Sobel
     sobel_x = [-1 0 1; -2 0 2; -1 0 1]; % Sobel kernel per Gx
     sobel_y = [-1 -2 -1; 0 0 0; 1 2 1]; % Sobel kernel per Gy
     
     % Applicazione della convoluzione dell'immagine con i kernel Sobel
-    gradiente_x = imfilter(double(preprocessedImg), sobel_x);
-    gradiente_y = imfilter(double(preprocessedImg), sobel_y);
+    gradiente_x = imfilter(double(Iobrcbr), sobel_x);
+    gradiente_y = imfilter(double(Iobrcbr), sobel_y);
     
     % Calcolo del gradiente con Sobel
     gradient_magnitude = sqrt(gradiente_x.^2 + gradiente_y.^2);
     
-    %oversegmentation
-    %oversegmentation = watershed(gradient_magnitude);
+    gradient_direction = atan2(gradiente_y, gradiente_x);
+    gradient_direction_deg = rad2deg(gradient_direction);
     
-    
-    % Definizione dei marcatori
-    markers = zeros(size(preprocessedImg));
-    
-    % Marcatori interni (ad esempio, basati sull'intensità)
-    %Per OPENING-BY-RECONSTRUCTION
-    %soglia_intensita = 85;
-    %Per OPENING
-    soglia_intensita = 100;
-    markers(preprocessedImg > soglia_intensita) = 1;
-    
-    % Marcatori esterni (ad esempio, basati sulla distanza)
-    distanza_margine = 0.005;
-    markers(bwdist(imdilate(markers, strel('diamond', 1))) <= distanza_margine) = 2;
-    %markers(bwdist(markers, 'euclidean') <= distanza_margine) = 2;
-    %markers = bwdist(~markers);
-    markersInverted = -markers;
-    modified_gradient = imimposemin(gradient_magnitude, markersInverted);
-    
-    % Segmentazione watershed
-    segmentazione = watershed(modified_gradient);
-    segmentazione(~markers) = 0;
+  %____________________________
 
+    %Regional Maxima of Opening-Closing by Reconstruction
+    fgm = imregionalmax(Iobrcbr);
+
+    %Modified Regional Maxima Superimposed on Original Image
+    se2 = strel(ones(3, 3));
+    fgm2 = imclose(fgm, se2);
+    fgm3 = imerode(fgm2,se2);
+
+    fgm4 = bwareaopen(fgm3, 20);
+    I3 = labeloverlay(inputImage, fgm4);
+    
+    bw  = imbinarize(Iobrcbr);
+     
+    D = bwdist(bw);
+    DL = watershed(D);
+
+    %Watershed Ridge Lines
+    bgm = DL == 0;
+
+    maschera = ~(bgm | fgm4);
+    gmag2 = imimposemin(gradient_magnitude, maschera);
+    L = watershed(gmag2);
+
+    labels = imdilate(L==0,ones(3,3)) + 2*bgm + 3*fgm4;
+
+    %Markers and Object Boundaries Superimposed on Original Image
+    I4 = labeloverlay(inputImage, labels);
+    imshow(I4);
+    
     % Colora il tumore (etichette assegnate in base ai marcatori)
-    colored_img = label2rgb(segmentazione);
-    
-    imshow(segmentazione, []);
-    % Visualizza l'immagine segmentata
-    %imshow(colored_img)
-    
-    imshow(inputImage)
-    hold on
-    overlaySeg = imshow(colored_img);
-    overlaySeg.AlphaData = 0.5;
-    title("Colored Labels Superimposed Transparently on Original Image");
-    
-    [label_matrix, num_labels]  = bwlabel(segmentazione);
-    regionProps = regionprops(label_matrix, 'Centroid', 'Area', 'Perimeter');
-    
-    for i = 1:num_labels
-        text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps(i).Area, regionProps(i).Perimeter), 'Color', 'red','FontSize', 10);
-    end
-    hold off;
+    %colored_img = label2rgb(I4);
+    % % Visualizza l'immagine segmentata
+    % %imshow(colored_img)
+    % 
+    % imshow(inputImage)
+    % hold on
+    % overlaySeg = imshow(colored_img);
+    % overlaySeg.AlphaData = 0.5;
+    % title("Colored Labels Superimposed Transparently on Original Image");
+    % 
+    % [label_matrix, num_labels]  = bwlabel(segmentazione);
+    % regionProps = regionprops(label_matrix, 'Centroid', 'Area', 'Perimeter');
+    % 
+    % for i = 1:num_labels
+    %     text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps(i).Area, regionProps(i).Perimeter), 'Color', 'red','FontSize', 10);
+    % end
+    % hold off;
     saveas(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
 end
 
