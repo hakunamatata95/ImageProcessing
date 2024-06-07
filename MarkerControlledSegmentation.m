@@ -14,14 +14,21 @@ for j = 1 : size(examplesFolders,2)
     % Ridimensionamento dell'immagine
     inputImage = Helpers.resize(inputImage, 256);
     
+  % Opening-by-Reconstruction: eseguo imerode ed imreconstruct.
+    
+    % Escludo porzioni bianche troppo piccole per essere riconducibili a
+    % tumori (in genere si tratta di alveoli polmonari)
     se = strel("diamond", 3);
     Ie = imerode(inputImage,se);
-    Iobr = imreconstruct(Ie, inputImage);
+    i_open_by_reconstruction = imreconstruct(Ie, inputImage);
+  %___________________
 
-    Iobrd = imdilate(Iobr,se);
-    Iobrcbr = imreconstruct(imcomplement(Iobrd),imcomplement(Iobr));
+    Iobrd = imdilate(i_open_by_reconstruction,se);
+    %imcomplement: complement of image 255 - x
+    Iobrcbr = imreconstruct(imcomplement(Iobrd),imcomplement(i_open_by_reconstruction));
     Iobrcbr = imcomplement(Iobrcbr);
-    
+  
+
   %CALCOLO GRADIENTE
 
     %[gmag_alternativo, gdir_alternativo] = imgradient(I);
@@ -40,7 +47,7 @@ for j = 1 : size(examplesFolders,2)
     gradient_direction = atan2(gradiente_y, gradiente_x);
     gradient_direction_deg = rad2deg(gradient_direction);
     
-  %____________________________
+  %___________________
 
     %Regional Maxima of Opening-Closing by Reconstruction
     fgm = imregionalmax(Iobrcbr);
@@ -55,8 +62,8 @@ for j = 1 : size(examplesFolders,2)
     
     bw  = imbinarize(Iobrcbr);
      
-    D = bwdist(bw);
-    DL = watershed(D);
+    distance_transform = bwdist(bw);
+    DL = watershed(distance_transform);
 
     %Watershed Ridge Lines
     bgm = DL == 0;

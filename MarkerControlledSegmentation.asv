@@ -13,16 +13,21 @@ for j = 1 : size(examplesFolders,2)
     
     % Ridimensionamento dell'immagine
     inputImage = Helpers.resize(inputImage, 256);
-    I=inputImage;
     
+  % Opening-by-Reconstruction: eseguo imerode ed imreconstruct.
+    
+    % Escludo porzioni bianche troppo piccole per essere riconducibili a
+    % tumori (in genere si tratta di alveoli polmonari)
     se = strel("diamond", 3);
-    Ie = imerode(I,se);
-    Iobr = imreconstruct(Ie, I);
+    Ie = imerode(inputImage,se);
+    i_open_by_reconstruction = imreconstruct(Ie, inputImage);
+  %___________________
 
-    Iobrd = imdilate(Iobr,se);
-    Iobrcbr = imreconstruct(imcomplement(Iobrd),imcomplement(Iobr));
+    Iobrd = imdilate(i_open_by_reconstruction,se);
+    Iobrcbr = imreconstruct(~(Iobrd),~(i_open_by_reconstruction));
     Iobrcbr = imcomplement(Iobrcbr);
-    
+  
+
   %CALCOLO GRADIENTE
 
     %[gmag_alternativo, gdir_alternativo] = imgradient(I);
@@ -41,23 +46,23 @@ for j = 1 : size(examplesFolders,2)
     gradient_direction = atan2(gradiente_y, gradiente_x);
     gradient_direction_deg = rad2deg(gradient_direction);
     
-  %____________________________
+  %___________________
 
     %Regional Maxima of Opening-Closing by Reconstruction
     fgm = imregionalmax(Iobrcbr);
 
     %Modified Regional Maxima Superimposed on Original Image
-    se2 = strel(ones(3,3));
-    fgm2 = imclose(fgm,se2);
+    se2 = strel(ones(3, 3));
+    fgm2 = imclose(fgm, se2);
     fgm3 = imerode(fgm2,se2);
 
-    fgm4 = bwareaopen(fgm3,20);
-    I3 = labeloverlay(I,fgm4);
+    fgm4 = bwareaopen(fgm3, 20);
+    I3 = labeloverlay(inputImage, fgm4);
     
     bw  = imbinarize(Iobrcbr);
      
-    D = bwdist(bw);
-    DL = watershed(D);
+    distance_transform = bwdist(bw);
+    DL = watershed(distance_transform);
 
     %Watershed Ridge Lines
     bgm = DL == 0;
@@ -69,7 +74,7 @@ for j = 1 : size(examplesFolders,2)
     labels = imdilate(L==0,ones(3,3)) + 2*bgm + 3*fgm4;
 
     %Markers and Object Boundaries Superimposed on Original Image
-    I4 = labeloverlay(I,labels);
+    I4 = labeloverlay(inputImage, labels);
     imshow(I4);
     
     % Colora il tumore (etichette assegnate in base ai marcatori)
