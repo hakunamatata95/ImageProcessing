@@ -20,14 +20,22 @@ for j = 1 : size(examplesFolders,2)
     % tumori (in genere si tratta di alveoli polmonari)
     se = strel("diamond", 3);
     Ie = imerode(inputImage,se);
-    i_open_by_reconstruction = imreconstruct(Ie, inputImage);
+    i_open_by_reconstr = imreconstruct(Ie, inputImage);
   %___________________
-
-    Iobrd = imdilate(i_open_by_reconstruction,se);
-    %imcomplement: complement of image 255 - x
-    Iobrcbr = imreconstruct(imcomplement(Iobrd),imcomplement(i_open_by_reconstruction));
-    Iobrcbr = imcomplement(Iobrcbr);
   
+  
+  % Opening-Closing-by-Reconstruction
+    i_open_by_reconstr_dilated = imdilate(i_open_by_reconstr, se);
+    
+    %imreconstruct(marker, mask). Il marker è l'immagine erosa che
+    %ricostruiamo con mask.
+    %Avendo dilatato Iobrd marker potrebbe essere "maggiore" di mask quindi
+    %uso imcomplement
+
+    %imcomplement: complement of image 255 - pixel_intensity
+    Iobrcbr = imreconstruct(imcomplement(i_open_by_reconstr_dilated), imcomplement(i_open_by_reconstr));
+    Iobrcbr = imcomplement(Iobrcbr);
+  %___________________
 
   %CALCOLO GRADIENTE
 
