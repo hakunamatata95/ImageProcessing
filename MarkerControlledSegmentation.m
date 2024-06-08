@@ -87,7 +87,8 @@ for j = 1 : size(examplesFolders,2)
     %Markers and Object Boundaries Superimposed on Original Image
     I4 = labeloverlay(inputImage, labels);
     imshow(I4);
-    
+    saveas(gcf, char(fullfile(folderToSave, 'marker_controlled_labels.png')));
+
     % Colora il tumore (etichette assegnate in base ai marcatori)
     colored_img = label2rgb(L);
     bgm_filled = imfill(bgm, 'holes');
