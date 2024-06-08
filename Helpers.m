@@ -44,7 +44,6 @@ classdef Helpers
              fileNames = {listaFiles.name};
         end
 
-
         function [imageTraining, imageLabel] = calculate_images_for_training_and_label(imagePath, labelPath)
             % Calcoliamo la nuova proporzione in base ai dati niftiread
             label = niftiread(labelPath);
@@ -85,8 +84,7 @@ classdef Helpers
             new_size = [newHeight, newWidth];
             imageResized = imresize(img, new_size);
         end
-
-        %TODO: rivedere il nome del metodo
+ 
         function binImage = otsubin(image)
             image = Helpers.rgb2gray(image);
             greyLevel = graythresh(image);
@@ -171,10 +169,6 @@ classdef Helpers
                     title(titleImage);
                 end
             end
-        end
-
-        function mask = threshold(img,value)
-            mask = img > value;
         end
 
         function img = rgb2gray(img)
