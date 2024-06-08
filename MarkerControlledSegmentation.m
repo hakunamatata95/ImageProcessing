@@ -71,11 +71,12 @@ for j = 1 : size(examplesFolders,2)
     bw  = imbinarize(Iobrcbr);
      
     distance_transform = bwdist(bw);
-    DL = watershed(distance_transform);
+    distance_labels = watershed(distance_transform);
 
-    %Watershed Ridge Lines. La distance_transform rende il polmone bianco
-    %quindi la linea di cresta si posizionerà sul massimo (bianco)
-    bgm = DL == 0;
+    % La distance_transform rende il polmone bianco
+    % quindi la linea di cresta si posizionerà sul massimo (bianco).
+    % Watershed Ridge Lines.
+    bgm = distance_labels == 0;
     
     maschera = bgm | fgm4;
     gmag2 = imimposemin(gradient_magnitude, maschera);
