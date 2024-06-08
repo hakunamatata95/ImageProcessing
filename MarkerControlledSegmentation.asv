@@ -62,7 +62,6 @@ for j = 1 : size(examplesFolders,2)
 
     %Modified Regional Maxima Superimposed on Original Image
     se2 = strel(ones(3, 3));
-    %L'operazione di chiusura morfologica è una dilatazione seguita da un'erosione, utilizzando lo stesso elemento strutturante per entrambe le operazioni.
     fgm2 = imclose(fgm, se2);
 
     fgm3 = bwareaopen(fgm2, 20);
@@ -88,8 +87,7 @@ for j = 1 : size(examplesFolders,2)
     %Markers and Object Boundaries Superimposed on Original Image
     I4 = labeloverlay(inputImage, labels);
     imshow(I4);
-    title("Labels con immagine originale");
-    exportgraphics(gcf, char(fullfile(folderToSave, 'labels_marker_controlled_.png')));
+    saveas(gcf, char(fullfile(folderToSave, 'marker_controlled_labels.png')));
 
     % Colora il tumore (etichette assegnate in base ai marcatori)
     colored_img = label2rgb(L);
@@ -107,7 +105,7 @@ for j = 1 : size(examplesFolders,2)
     hold on
     overlaySeg = imshow(rgbOverlay);
     overlaySeg.AlphaData = 0.5;
-    title("Risultati Segmentazione Marker Controlled");
+    title("Colored Labels Superimposed Transparently on Original Image");
     
     [label_matrix, num_labels]  = bwlabel(bgm_filled_AND_fgm3);
     centroids = regionprops(label_matrix, 'Centroid');
@@ -122,7 +120,7 @@ for j = 1 : size(examplesFolders,2)
     end
 
     hold off;
-    exportgraphics(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
+    saveas(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
 end
 
  
