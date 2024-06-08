@@ -88,7 +88,8 @@ for j = 1 : size(examplesFolders,2)
     %Markers and Object Boundaries Superimposed on Original Image
     I4 = labeloverlay(inputImage, labels);
     imshow(I4);
-    saveas(gcf, char(fullfile(folderToSave, 'marker_controlled_labels.png')));
+    title("Labels con immagine originale");
+    exportgraphics(gcf, char(fullfile(folderToSave, 'labels_marker_controlled_.png')));
 
     % Colora il tumore (etichette assegnate in base ai marcatori)
     colored_img = label2rgb(L);
@@ -106,7 +107,7 @@ for j = 1 : size(examplesFolders,2)
     hold on
     overlaySeg = imshow(rgbOverlay);
     overlaySeg.AlphaData = 0.5;
-    title("Colored Labels Superimposed Transparently on Original Image");
+    title("Risultati Segmentazione Marker Controlled");
     
     [label_matrix, num_labels]  = bwlabel(bgm_filled_AND_fgm4);
     centroids = regionprops(label_matrix, 'Centroid');
@@ -121,7 +122,7 @@ for j = 1 : size(examplesFolders,2)
     end
 
     hold off;
-    saveas(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
+    exportgraphics(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
 end
 
  

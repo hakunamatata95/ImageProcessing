@@ -29,7 +29,8 @@ for j = 1 : size(examplesFolders,2)
     
     occurrences = binarizedImage - imageWithoutResults;
     imshow(occurrences);
-    saveas(gcf, char(fullfile(folderToSave, 'occorrenze_rilevate.png')));
+    title("Tumori rilevati");
+    exportgraphics(gcf, char(fullfile(folderToSave, 'soglia_occorrenze_rilevate.png')));
     
     % Etichettatura deòle regioni connesse nell'immagine binarizzata
     [label_matrix, num_labels] = bwlabel(occurrences);
@@ -76,7 +77,8 @@ for j = 1 : size(examplesFolders,2)
     
     hold off;% Disbilita la sovrapposizione dei tracciati
 
-    saveas(gcf, char(fullfile(folderToSave, 'segmentazione_a_soglia.png')));
+    title("Risultati Segmentazione a Soglia");
+    exportgraphics(gcf, char(fullfile(folderToSave, 'segmentazione_a_soglia.png')));
       
 end    
 
