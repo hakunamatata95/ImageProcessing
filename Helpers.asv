@@ -159,11 +159,10 @@ classdef Helpers
         end  
 
 
-        % Mostra le immagini prese in input con i relativi nomi
         function imsshow(arrayImgs, namesImgs)
             numImgs = numel(arrayImgs);
             
-            % Se namesImgs non viene fornito, lo inizializza con 'A'
+            % Se namesImgs non viene fornito, inizializza con 'A'
             if ~exist('namesImgs', 'var') || isempty(namesImgs)
                 namesImgs = zeros(0, 1);
             end
@@ -193,8 +192,6 @@ classdef Helpers
             end
         end
 
-
-        % Converte un'immagine in scala di grigi se necessario
         function img = rgb2gray(img)
             if size(img, 3) == 3
                 img = rgb2gray(img);

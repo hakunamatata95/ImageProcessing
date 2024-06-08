@@ -62,7 +62,6 @@ for j = 1 : size(examplesFolders,2)
 
     %Modified Regional Maxima Superimposed on Original Image
     se2 = strel(ones(3, 3));
-    %L'operazione di chiusura morfologica è una dilatazione seguita da un'erosione, utilizzando lo stesso elemento strutturante per entrambe le operazioni.
     fgm2 = imclose(fgm, se2);
 
     fgm3 = bwareaopen(fgm2, 20);
