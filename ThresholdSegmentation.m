@@ -1,5 +1,8 @@
-examplesFolders = Helpers.elenca_file_con_prefisso('Dataset', 'lung');
+clear;
+close all;
 
+% Carica i percorsi delle immagini MRI del polmone
+examplesFolders = Helpers.elenca_file_con_prefisso('Dataset', 'lung');
 
 for j = 1 : size(examplesFolders,2)
 
