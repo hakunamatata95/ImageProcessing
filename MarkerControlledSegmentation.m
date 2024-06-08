@@ -89,20 +89,27 @@ for j = 1 : size(examplesFolders,2)
     imshow(I4);
     
     % Colora il tumore (etichette assegnate in base ai marcatori)
-    %colored_img = label2rgb(labels);
-     
+    colored_img = label2rgb(L);
+    bgm_filled = imfill(bgm, 'holes');
+    
+    bgm_filled_AND_fgm4 = bgm_filled & fgm4;
+
+    
     imshow(inputImage)
     hold on
-    overlaySeg = imshow(fgm4);
+    overlaySeg = imshow(bgm_filled_AND_fgm4);
     overlaySeg.AlphaData = 0.5;
     title("Colored Labels Superimposed Transparently on Original Image");
     
-    [label_matrix, num_labels]  = bwlabel(segmentazione);
-    regionProps = regionprops(label_matrix, 'Centroid', 'Area', 'Perimeter');
+    [label_matrix, num_labels]  = bwlabel(bgm_filled_AND_fgm4);
+    regionProps = regionprops(label_matrix, 'Centroid');
     
     for i = 1:num_labels
-        text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps(i).Area, regionProps(i).Perimeter), 'Color', 'red','FontSize', 10);
+        region = bwselect(L, regionProps(i).Centroid(1), regionProps(i).Centroid(2));
+        regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
+        text(regionProps.Centroid(1), regionProps.Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'red','FontSize', 15);
     end
+
     hold off;
     saveas(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
 end

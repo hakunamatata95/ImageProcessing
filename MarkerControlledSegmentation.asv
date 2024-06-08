@@ -6,7 +6,7 @@ examplesFolders = Helpers.elenca_file_con_prefisso('Dataset', 'lung');
 
 
 for j = 1 : size(examplesFolders,2)
-    %folderToSave = fullfile('Dataset', examplesFolders(j));
+    
     folderToSave = fullfile('Dataset', examplesFolders(j));
     inputImage  = imread(char(fullfile(folderToSave, 'trainingImage.png')));
     inputImage = Helpers.rgb2gray(inputImage);
@@ -80,31 +80,37 @@ for j = 1 : size(examplesFolders,2)
     maschera = bgm | fgm4;
     gmag2 = imimposemin(gradient_magnitude, maschera);
     L = watershed(gmag2);
-
-    labels = imdilate(L==0, ones(3,3)) + 2*bgm + 3*fgm4;
+    
+    %Nella labels: L == 0 dilatate con elemento strutturale. Valori bgm a 2. Valori fgm4 a 3.
+    labels = imdilate(L==0, ones(3,3)) + 2 * bgm + 3 * fgm4;
 
     %Markers and Object Boundaries Superimposed on Original Image
     I4 = labeloverlay(inputImage, labels);
     imshow(I4);
     
     % Colora il tumore (etichette assegnate in base ai marcatori)
-    colored_img = label2rgb(labels);
-    % % Visualizza l'immagine segmentata
-    % %imshow(colored_img)
-    % 
-    % imshow(inputImage)
-    % hold on
-    % overlaySeg = imshow(colored_img);
-    % overlaySeg.AlphaData = 0.5;
-    % title("Colored Labels Superimposed Transparently on Original Image");
-    % 
-    % [label_matrix, num_labels]  = bwlabel(segmentazione);
-    % regionProps = regionprops(label_matrix, 'Centroid', 'Area', 'Perimeter');
-    % 
-    % for i = 1:num_labels
-    %     text(regionProps(i).Centroid(1), regionProps(i).Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps(i).Area, regionProps(i).Perimeter), 'Color', 'red','FontSize', 10);
-    % end
-    % hold off;
+    colored_img = label2rgb(L);
+    bgm_filled = imfill(bgm, 'holes');
+    
+    bgm_filled_AND_fgm4 = bgm_filled & fgm4;
+
+    
+    imshow(inputImage)
+    hold on
+    overlaySeg = imshow(colored_img);
+    overlaySeg.AlphaData = 0.3;
+    title("Colored Labels Superimposed Transparently on Original Image");
+    
+    [label_matrix, num_labels]  = bwlabel(bgm_filled_AND_fgm4);
+    regionProps = regionprops(label_matrix, 'Centroid');
+    
+    for i = 1:num_labels
+        region = bwselect(L, regionProps(i).Centroid(1), regionProps(i).Centroid(2));
+        regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
+        text(regionProps.Centroid(1), regionProps.Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'red','FontSize', 15);
+    end
+
+    hold off;
     saveas(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
 end
 
