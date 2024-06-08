@@ -94,20 +94,28 @@ for j = 1 : size(examplesFolders,2)
     
     bgm_filled_AND_fgm4 = bgm_filled & fgm4;
 
-    
+    % Converti la matrice logica in uint8
+    uint8Overlay = uint8(bgm_filled_AND_fgm4);
+
+    % Converti l'immagine uint8 in una immagine RGB
+    rgbOverlay = cat(3, uint8Overlay*255, uint8Overlay*0, uint8Overlay*0);  % Rosso
+
     imshow(inputImage)
     hold on
-    overlaySeg = imshow(bgm_filled_AND_fgm4);
+    overlaySeg = imshow(rgbOverlay);
     overlaySeg.AlphaData = 0.5;
     title("Colored Labels Superimposed Transparently on Original Image");
     
     [label_matrix, num_labels]  = bwlabel(bgm_filled_AND_fgm4);
-    regionProps = regionprops(label_matrix, 'Centroid');
-    
-    for i = 1:num_labels
-        region = bwselect(L, regionProps(i).Centroid(1), regionProps(i).Centroid(2));
-        regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
-        text(regionProps.Centroid(1), regionProps.Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'red','FontSize', 15);
+    centroids = regionprops(label_matrix, 'Centroid');
+    if ~isempty(centroids) 
+        for i = 1:num_labels
+            region = bwselect(L, centroids(i).Centroid(1), centroids(i).Centroid(2));
+            regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
+            if ~isempty(regionProps)
+                text(regionProps.Centroid(1), regionProps.Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'red','FontSize', 15);
+            end 
+        end
     end
 
     hold off;
