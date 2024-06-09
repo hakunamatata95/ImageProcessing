@@ -76,7 +76,6 @@ for j = 1 : size(examplesFolders,2)
     
     hold off;% Disbilita la sovrapposizione dei tracciati
 
-    title("Risultati Segmentazione a Soglia");
     exportgraphics(gcf, char(fullfile(folderToSave, 'segmentazione_a_soglia.png')));
       
 end    

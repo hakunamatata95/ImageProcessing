@@ -88,7 +88,7 @@ for j = 1 : size(examplesFolders,2)
     %Markers and Object Boundaries Superimposed on Original Image
     I4 = labeloverlay(inputImage, labels);
     imshow(I4);
-    title("Labels con immagine originale");
+    
     exportgraphics(gcf, char(fullfile(folderToSave, 'labels_marker_controlled_.png')));
 
     % Colora il tumore (etichette assegnate in base ai marcatori)
@@ -96,34 +96,35 @@ for j = 1 : size(examplesFolders,2)
     bgm_filled = imfill(bgm, 'holes');
     
     bgm_filled_AND_fgm3 = bgm_filled & fgm3;
-    
-
-    % Converti la matrice logica in uint8
-    uint8Overlay = uint8(bgm_filled_AND_fgm3);
-
-    % Converti l'immagine uint8 in una immagine RGB
-    rgbOverlay = cat(3, uint8Overlay*255, uint8Overlay*0, uint8Overlay*0);  % Rosso
 
     imshow(inputImage)
     hold on
-    overlaySeg = imshow(rgbOverlay);
-    overlaySeg.AlphaData = 0.5;
-    title("Risultati Segmentazione Marker Controlled");
+
     
     [label_matrix, num_labels]  = bwlabel(bgm_filled_AND_fgm3);
-    centroids = regionprops(label_matrix, 'Centroid');
+    region_props_label_matrix = regionprops(label_matrix, 'Centroid', 'Area', 'Perimeter');
 
     image_size = size(inputImage);
     occorrenze_rilevate = false(image_size(1), image_size(2));
 
-    if ~isempty(centroids)
+    if ~isempty(region_props_label_matrix)
 
         for i = 1:num_labels
-            region = bwselect(L, centroids(i).Centroid(1), centroids(i).Centroid(2));
+            region = bwselect(L, region_props_label_matrix(i).Centroid(1), region_props_label_matrix(i).Centroid(2));
             regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
+            
+            % Se il centroide della rilevazione non è nel tumore per evitare
+            % regioni errate del bwselect vengono impostate soglie di
+            % coerenza. Se area o perimetro sono maggiori di queste soglie
+            % si utilizzerà la regione processata (con area e perimetro
+            % meno precisi)
+            if regionProps.Area > 600 || regionProps.Perimeter > 250
+                regionProps = region_props_label_matrix(i);
+                region = label_matrix == i;
+            end
 
             if ~isempty(regionProps)
-                text(regionProps.Centroid(1), regionProps.Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'red','FontSize', 15);
+                text(regionProps.Centroid(1), regionProps.Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'yellow','FontSize', 6);
             end 
             
             %aggiorno la matrice logica di occorrenze rilevate basandomi
@@ -133,9 +134,17 @@ for j = 1 : size(examplesFolders,2)
         end
     end
 
+    % Converti la matrice logica in uint8
+    uint8Overlay = uint8(occorrenze_rilevate);
+
+    % Converti l'immagine uint8 in una immagine RGB
+    rgbOverlay = cat(3, uint8Overlay*255, uint8Overlay*0, uint8Overlay*0);  % Rosso
+    overlaySeg = imshow(rgbOverlay);
+    overlaySeg.AlphaData = 0.5;
     hold off;
     exportgraphics(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
 
+    imshow(occorrenze_rilevate, []);
     imwrite(logical(occorrenze_rilevate), char(fullfile(folderToSave, 'marker_controlled_occorrenze_rilevate.png')));
 end
 
