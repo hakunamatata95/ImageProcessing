@@ -29,8 +29,7 @@ for j = 1 : size(examplesFolders,2)
     
     occurrences = binarizedImage - imageWithoutResults;
     imshow(occurrences);
-    title("Tumori rilevati");
-    exportgraphics(gcf, char(fullfile(folderToSave, 'soglia_occorrenze_rilevate.png')));
+    imwrite(logical(occurrences),char(fullfile(folderToSave, 'soglia_occorrenze_rilevate.png')));
     
     % Etichettatura deòle regioni connesse nell'immagine binarizzata
     [label_matrix, num_labels] = bwlabel(occurrences);

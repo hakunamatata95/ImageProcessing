@@ -96,6 +96,8 @@ for j = 1 : size(examplesFolders,2)
     bgm_filled = imfill(bgm, 'holes');
     
     bgm_filled_AND_fgm3 = bgm_filled & fgm3;
+    imshow(bgm_filled_AND_fgm3)
+    imwrite(logical(bgm_filled_AND_fgm3),char(fullfile(folderToSave, 'marker_controlled_occorrenze_rilevate.png')));
 
     % Converti la matrice logica in uint8
     uint8Overlay = uint8(bgm_filled_AND_fgm3);

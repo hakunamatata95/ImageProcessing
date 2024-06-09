@@ -1,5 +1,8 @@
-examplesFolders = Helpers.elenca_file_con_prefisso('Dataset', 'lung');
+clear;
+close all;
 
+% Carica i percorsi delle immagini MRI del polmone
+examplesFolders = Helpers.elenca_file_con_prefisso('Dataset', 'lung');
 
 for j = 1 : size(examplesFolders,2)
 
@@ -26,7 +29,8 @@ for j = 1 : size(examplesFolders,2)
     
     occurrences = binarizedImage - imageWithoutResults;
     imshow(occurrences);
-    saveas(gcf, char(fullfile(folderToSave, 'occorrenze_rilevate.png')));
+    saveAs()
+    %exportgraphics(gcf, char(fullfile(folderToSave, 'soglia_occorrenze_rilevate.png')));
     
     % Etichettatura deòle regioni connesse nell'immagine binarizzata
     [label_matrix, num_labels] = bwlabel(occurrences);
@@ -40,34 +44,41 @@ for j = 1 : size(examplesFolders,2)
     for i = 1:num_labels
         
         % Seleziona la regione bianca, sulle coordinate fornite,
-        % dell'immagine iniziale binar
+        % dell'immagine iniziale binarizzata. In modo da ottenere area e
+        % perimetro precisi
         region = bwselect(inputImageBin, centroids(i).Centroid(1), centroids(i).Centroid(2));
         regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
         
+        % Se le props delle regioni analizzate sono eccessive significa che
+        % sono stati rilevati bordi errati (principalmente a causa di
+        % tumori a contatto con le pareti del polmone)
         if ~isempty(regionProps) && (regionProps.Area > 600 || regionProps.Perimeter > 250)
+            % Calcolo delle regionprops sulle occorrenze rilevate (con aree
+            % e perimetri erosi, quindi minori)
             region = bwselect(occurrences, centroids(i).Centroid(1), centroids(i).Centroid(2));
             regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
         end 
 
         % Trova il perimetro della parte bianca dell'immagine binarizzata
-        perimeterTrack = bwperim(region,8);
-        [B,L] = bwboundaries(perimeterTrack,'noholes');
+        perimeterTrack = bwperim(region, 8);
+        B = bwboundaries(perimeterTrack, 'noholes');
         for k = 1:length(B)
             boundary = B{k};
-            plot(boundary(:,2), boundary(:,1), 'r', 'LineWidth', 1)
+            plot(boundary(:, 2), boundary(:, 1), 'r', 'LineWidth', 1)
         end
     
         if ~isempty(regionProps)
             text(regionProps.Centroid(1), regionProps.Centroid(2), ...
                 sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'yellow', 'FontSize', 10);
         
-        disp([' idxs: ' folderToSave  ' ' num2str(i) ' Area: ' num2str(regionProps.Area) ' Perimeter: ' num2str(regionProps.Perimeter)]);
+            disp([' idxs: ' folderToSave  ' ' num2str(i) ' Area: ' num2str(regionProps.Area) ' Perimeter: ' num2str(regionProps.Perimeter)]);
         end 
     end
     
     hold off;% Disbilita la sovrapposizione dei tracciati
 
-    saveas(gcf, char(fullfile(folderToSave, 'segmentazione_a_soglia.png')));
+    title("Risultati Segmentazione a Soglia");
+    exportgraphics(gcf, char(fullfile(folderToSave, 'segmentazione_a_soglia.png')));
       
 end    
 
