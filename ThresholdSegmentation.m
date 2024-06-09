@@ -12,7 +12,7 @@ for j = 1 : size(examplesFolders,2)
     inputImage = Helpers.resize(inputImage, 256);
     
     % Erosione con elemento strutturale (diamante) con un raggio di 2
-    structureElement = strel('diamond', 2);
+    structureElement = strel('diamond', 1);
     erodedImage = imerode(inputImage, structureElement);
   
     % Conversione immagine in scala di grigi se necessario
@@ -31,7 +31,7 @@ for j = 1 : size(examplesFolders,2)
     imshow(occurrences);
     imwrite(logical(occurrences),char(fullfile(folderToSave, 'soglia_occorrenze_rilevate.png')));
     
-    % Etichettatura deòle regioni connesse nell'immagine binarizzata
+    % Etichettatura delle regioni connesse nell'immagine binarizzata
     [label_matrix, num_labels] = bwlabel(occurrences);
     % Calcolo centroidi delle regioni connesse sulle occorrenze rilevate
     centroids = regionprops(label_matrix, 'Centroid');

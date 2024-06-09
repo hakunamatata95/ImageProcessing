@@ -202,18 +202,12 @@ classdef Helpers
         end
 
         % Calcola TP, TN, FP, FN in base ai pixel delle immagini
-        function [TP, TN, FP, FN, ACC, TPR, TNR] = calculate_metrics(labels, testImage)
+        function [TP, TN, FP, FN] = calculate_metrics(labels, testImage)
             % Calcola le matrici di confusione
             TP = sum(sum(labels & testImage));
             TN = sum(sum(~labels & ~testImage));
             FP = sum(sum(~labels & testImage));
             FN = sum(sum(labels & ~testImage));
-            
-            % Calcola la Accuracy, il True Positive Rate ed il True
-            % Negative Rate
-            ACC = (TP + TN) / (TP + TN + FP + FN);
-            TPR = TP / (TP + FN);
-            TNR = TN / (TN + FP);
         end
     end
 end
