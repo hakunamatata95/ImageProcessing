@@ -4,7 +4,7 @@ close all;
 % Carica i percorsi delle immagini MRI del polmone
 examplesFolders = Helpers.elenca_file_con_prefisso('Dataset', 'lung');
 
-newSize = [128, 128];
+newSize = [256, 256];
 
 TPThreshold = 0;
 TNThreshold = 0;
@@ -51,6 +51,17 @@ TPRMarkerControlled = TPMarkerControlled / (TPMarkerControlled + FNMarkerControl
 TNRMarkerControlled = TNMarkerControlled / (TNMarkerControlled + FPMarkerControlled);
 
 % Stampa dei risultati
+
+fprintf('TPThreshold = %.4f\n', TPThreshold);
+fprintf('TNThreshold = %.4f\n', TNThreshold);
+fprintf('FPThreshold = %.4f\n', FPThreshold);
+fprintf('FNThreshold = %.4f\n', FNThreshold);
+
+fprintf('TPMarkerControlled = %.4f\n', TPMarkerControlled);
+fprintf('TNMarkerControlled = %.4f\n', TNMarkerControlled);
+fprintf('FPMarkerControlled = %.4f\n', FPMarkerControlled);
+fprintf('FNMarkerControlled = %.4f\n', FNMarkerControlled);
+
 fprintf('ACCThreshold = %.4f\n', ACCThreshold);
 fprintf('TPRThreshold = %.4f\n', TPRThreshold);
 fprintf('TNRThreshold = %.4f\n', TNRThreshold);
