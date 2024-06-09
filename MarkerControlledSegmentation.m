@@ -96,8 +96,7 @@ for j = 1 : size(examplesFolders,2)
     bgm_filled = imfill(bgm, 'holes');
     
     bgm_filled_AND_fgm3 = bgm_filled & fgm3;
-    imshow(bgm_filled_AND_fgm3)
-    imwrite(logical(bgm_filled_AND_fgm3),char(fullfile(folderToSave, 'marker_controlled_occorrenze_rilevate.png')));
+    
 
     % Converti la matrice logica in uint8
     uint8Overlay = uint8(bgm_filled_AND_fgm3);
@@ -113,18 +112,31 @@ for j = 1 : size(examplesFolders,2)
     
     [label_matrix, num_labels]  = bwlabel(bgm_filled_AND_fgm3);
     centroids = regionprops(label_matrix, 'Centroid');
-    if ~isempty(centroids) 
+
+    image_size = size(inputImage);
+    occorrenze_rilevate = false(image_size(1), image_size(2));
+
+    if ~isempty(centroids)
+
         for i = 1:num_labels
             region = bwselect(L, centroids(i).Centroid(1), centroids(i).Centroid(2));
             regionProps = regionprops(region, 'Area', 'Perimeter', 'Centroid');
+
             if ~isempty(regionProps)
                 text(regionProps.Centroid(1), regionProps.Centroid(2), sprintf('Area: %d \n Perimetro: %.2f', regionProps.Area, regionProps.Perimeter), 'Color', 'red','FontSize', 15);
             end 
+            
+            %aggiorno la matrice logica di occorrenze rilevate basandomi
+            %sulla selezione della regione iniziale trovata tramite il
+            %centroide
+            occorrenze_rilevate = occorrenze_rilevate | region;
         end
     end
 
     hold off;
     exportgraphics(gcf, char(fullfile(folderToSave, 'segmentazione_marker_controlled.png')));
+
+    imwrite(logical(occorrenze_rilevate), char(fullfile(folderToSave, 'marker_controlled_occorrenze_rilevate.png')));
 end
 
  
