@@ -202,7 +202,7 @@ classdef Helpers
         end
 
         % Calcola TP, TN, FP, FN in base ai pixel delle immagini
-        function [TP, TN, FP, FN] = calculate_metrics(labels, testImage)
+        function [TP, TN, FP, FN] = calculate_confusion_matrix(labels, testImage)
             % Calcola le matrici di confusione
             TP = sum(sum(labels & testImage));
             TN = sum(sum(~labels & ~testImage));

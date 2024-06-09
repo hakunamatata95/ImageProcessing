@@ -30,7 +30,7 @@ for j = 1 : size(examplesFolders,2)
     labels = imresize(labels, newSize);
 
     % Calcola le matrici di confusione per il Threshold
-    [TP, TN, FP, FN] = Helpers.calculate_metrics(labels, thresholdOccurences);
+    [TP, TN, FP, FN] = Helpers.calculate_confusion_matrix(labels, thresholdOccurences);
 
     % Somma i valori delle matrici di confusione
     TPThreshold = TPThreshold + TP;
@@ -39,7 +39,7 @@ for j = 1 : size(examplesFolders,2)
     FNThreshold = FNThreshold + FN;
 
     % Calcola le matrici di confusione per il Marker Controlled
-    [TPa, TNa, FPa, FNa] = Helpers.calculate_metrics(labels, markerControlledOccurences);
+    [TPa, TNa, FPa, FNa] = Helpers.calculate_confusion_matrix(labels, markerControlledOccurences);
 
     % Somma i valori delle matrici di confusione
     TPMarkerControlled = TPMarkerControlled + TPa;
